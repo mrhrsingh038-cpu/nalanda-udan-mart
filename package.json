@@ -1,7 +1,7 @@
 {
   "name": "nalanda-udan-mart",
   "version": "1.1.0",
-  "description": "Nalanda Udan Mart - Secure E-commerce Platform",
+  "description": "Nalanda Udan Mart - E-commerce & Admin Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
