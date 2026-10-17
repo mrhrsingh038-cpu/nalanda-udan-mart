@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
@@ -24,11 +25,17 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 app.use(cors());
 app.use(express.json({ limit: "4mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+
+// Dynamic Public Static Directory Fallback
+const publicDir = fs.existsSync(path.join(__dirname, "public"))
+  ? path.join(__dirname, "public")
+  : __dirname;
+
+app.use(express.static(publicDir));
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 15,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Bohot zyada attempts. Kripya 15 minute baad dobara koshish karein." }
@@ -82,6 +89,7 @@ const OrderSchema = new mongoose.Schema({
     qty: { type: Number, required: true, min: 1 }
   }],
   subtotal: { type: Number, required: true, min: 0 },
+  total: { type: Number, required: true, min: 0 },
   deliveryRateAtOrder: { type: Number, default: 10 },
   status: { type: String, enum: ["Pending", "Accepted", "Delivered", "Cancelled"], default: "Pending" },
   createdAt: { type: Date, default: Date.now }
@@ -152,7 +160,7 @@ const requireOwner = (req, res, next) => {
   return res.status(403).json({ success: false, message: "Access Denied: Sirf Owner hi yeh action le sakte hain." });
 };
 
-/* ==================== INITIAL SEEDING ==================== */
+/* ==================== INITIAL DATABASE SEED ==================== */
 
 const starterCategories = [
   { name: "Grocery", emoji: "🌾" },
@@ -217,22 +225,24 @@ async function seedDatabase() {
         manageAdmins: true
       }
     });
-    console.log(`[AUTH] Initial Owner account verified: ${email}`);
+    console.log(`[AUTH] Default Owner account created: ${email}`);
   }
 }
 
-/* ==================== PUBLIC CUSTOMER ROUTES ==================== */
+/* ==================== PUBLIC CUSTOMER APIS ==================== */
 
+// GET /api/delivery-charge
 app.get("/api/delivery-charge", async (req, res) => {
   try {
     const setting = await Setting.findOne({ key: "udanDeliveryChargePerKm" });
     const rate = setting ? Number(setting.value) : 10;
     res.json({ success: true, rate, source: "database" });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Delivery rate fetch error" });
+    res.status(500).json({ success: false, message: "Delivery charge fetch error" });
   }
 });
 
+// GET /api/products
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find().sort({ updatedAt: -1 });
@@ -242,6 +252,7 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
+// GET /api/categories
 app.get("/api/categories", async (req, res) => {
   try {
     const categories = await Category.find().sort({ name: 1 });
@@ -251,7 +262,7 @@ app.get("/api/categories", async (req, res) => {
   }
 });
 
-// Secure Checkout: Server calculates exact total based on DB prices
+// POST /api/orders (Customer Order Placed & Database Verified)
 app.post("/api/orders", async (req, res) => {
   try {
     const { customerName, phone, address, items, paymentMethod } = req.body;
@@ -271,13 +282,19 @@ app.post("/api/orders", async (req, res) => {
     const validatedItems = [];
 
     for (const item of items) {
-      const dbProduct = await Product.findById(item.id);
+      const pId = item.id || item._id || item.productId;
+      if (!pId || !mongoose.Types.ObjectId.isValid(pId)) {
+        return res.status(400).json({ success: false, message: `Invalid product ID mila.` });
+      }
+
+      const dbProduct = await Product.findById(pId);
       if (!dbProduct) {
-        return res.status(400).json({ success: false, message: `Product '${item.name || item.id}' ab uplabdh nahi hai.` });
+        return res.status(400).json({ success: false, message: `Product '${item.name || pId}' ab uplabdh nahi hai.` });
       }
       if (!dbProduct.isAvailable || dbProduct.stock <= 0) {
-        return res.status(400).json({ success: false, message: `'${dbProduct.name}' out of stock hai.` });
+        return res.status(400).json({ success: false, message: `'${dbProduct.name}' out of stock ho chuka hai.` });
       }
+
       const qty = Math.max(1, parseInt(item.qty, 10) || 1);
       const itemSub = dbProduct.price * qty;
       calculatedSubtotal += itemSub;
@@ -294,6 +311,8 @@ app.post("/api/orders", async (req, res) => {
     const currentRate = deliverySetting ? Number(deliverySetting.value) : 10;
 
     const orderId = "UM" + Date.now();
+    const finalAmount = Math.round(calculatedSubtotal * 100) / 100;
+
     const newOrder = await Order.create({
       orderId,
       customerName: customerName.trim(),
@@ -301,7 +320,8 @@ app.post("/api/orders", async (req, res) => {
       address: address.trim(),
       paymentMethod: paymentMethod || "Cash on Delivery",
       items: validatedItems,
-      subtotal: Math.round(calculatedSubtotal * 100) / 100,
+      subtotal: finalAmount,
+      total: finalAmount,
       deliveryRateAtOrder: currentRate,
       status: "Pending"
     });
@@ -312,6 +332,7 @@ app.post("/api/orders", async (req, res) => {
         orderId: newOrder.orderId,
         customerName: newOrder.customerName,
         subtotal: newOrder.subtotal,
+        total: newOrder.total,
         deliveryRateAtOrder: newOrder.deliveryRateAtOrder,
         createdAt: newOrder.createdAt
       }
@@ -321,7 +342,7 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-/* ==================== AUTHENTICATION ROUTES ==================== */
+/* ==================== AUTHENTICATION APIS ==================== */
 
 app.post("/api/auth/login", loginLimiter, async (req, res) => {
   try {
@@ -380,14 +401,14 @@ app.get("/api/auth/me", authenticate, (req, res) => {
   });
 });
 
-/* ==================== PROTECTED ADMIN ROUTES ==================== */
+/* ==================== PROTECTED ADMIN APIS ==================== */
 
-// Delivery Charge
+// Delivery Charge Setting
 app.post("/api/admin/delivery-charge", authenticate, requirePermission("manageDeliveryCharge"), async (req, res) => {
   try {
     const rate = Number(req.body.rate);
     if (!Number.isFinite(rate) || rate < 0) {
-      return res.status(400).json({ success: false, message: "Sahi positive number daalein." });
+      return res.status(400).json({ success: false, message: "Sahi positive rate enter karein." });
     }
 
     const previous = await Setting.findOne({ key: "udanDeliveryChargePerKm" });
@@ -408,12 +429,12 @@ app.post("/api/admin/delivery-charge", authenticate, requirePermission("manageDe
   }
 });
 
-// Products Management
+// Products: Add
 app.post("/api/admin/products", authenticate, requirePermission("manageProducts"), async (req, res) => {
   try {
     const { name, price, stock, isAvailable, category, emoji, photo, description } = req.body;
     if (!name || !name.trim() || Number(price) <= 0) {
-      return res.status(400).json({ success: false, message: "Product naam aur valid price zaroori hain." });
+      return res.status(400).json({ success: false, message: "Product naam aur sahi price zaroori hain." });
     }
 
     const product = await Product.create({
@@ -430,10 +451,11 @@ app.post("/api/admin/products", authenticate, requirePermission("manageProducts"
     await createAuditLog("CREATE_PRODUCT", req.user.email, product.name, { productId: product._id, price: product.price });
     res.json({ success: true, product });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Product add nahi ho saka." });
+    res.status(500).json({ success: false, message: "Product create error." });
   }
 });
 
+// Products: Update
 app.put("/api/admin/products/:id", authenticate, requirePermission("manageProducts"), async (req, res) => {
   try {
     const { name, price, stock, isAvailable, category, emoji, photo, description } = req.body;
@@ -442,7 +464,7 @@ app.put("/api/admin/products/:id", authenticate, requirePermission("manageProduc
     if (name !== undefined) updateData.name = name.trim();
     if (price !== undefined) {
       const p = Number(price);
-      if (p <= 0) return res.status(400).json({ success: false, message: "Price 0 se zyada hona chahiye." });
+      if (p <= 0) return res.status(400).json({ success: false, message: "Price 0 se zyada honi chahiye." });
       updateData.price = p;
     }
     if (stock !== undefined) updateData.stock = Math.max(0, Number(stock) || 0);
@@ -462,6 +484,7 @@ app.put("/api/admin/products/:id", authenticate, requirePermission("manageProduc
   }
 });
 
+// Products: Delete
 app.delete("/api/admin/products/:id", authenticate, requirePermission("manageProducts"), async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
@@ -474,14 +497,14 @@ app.delete("/api/admin/products/:id", authenticate, requirePermission("managePro
   }
 });
 
-// Categories Management
+// Categories: Add
 app.post("/api/admin/categories", authenticate, requirePermission("manageCategories"), async (req, res) => {
   try {
     const { name, emoji } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: "Category naam bhariye." });
 
     const exists = await Category.findOne({ name: name.trim() });
-    if (exists) return res.status(400).json({ success: false, message: "Yeh category pehle se maujood hai." });
+    if (exists) return res.status(400).json({ success: false, message: "Category pehle se maujood hai." });
 
     const cat = await Category.create({ name: name.trim(), emoji: emoji ? emoji.trim() : "🛍️" });
     await createAuditLog("CREATE_CATEGORY", req.user.email, cat.name);
@@ -491,25 +514,26 @@ app.post("/api/admin/categories", authenticate, requirePermission("manageCategor
   }
 });
 
+// Categories: Delete
 app.delete("/api/admin/categories/:id", authenticate, requirePermission("manageCategories"), async (req, res) => {
   try {
     const cat = await Category.findById(req.params.id);
     if (!cat) return res.status(404).json({ success: false, message: "Category nahi mili." });
 
     const fallbackCat = await Category.findOne({ _id: { $ne: cat._id } });
-    if (!fallbackCat) return res.status(400).json({ success: false, message: "Kam se kam ek category rehni chahiye." });
+    if (!fallbackCat) return res.status(400).json({ success: false, message: "Kam se kam ek category rehna zaroori hai." });
 
     await Product.updateMany({ category: cat.name }, { category: fallbackCat.name });
     await Category.findByIdAndDelete(req.params.id);
 
     await createAuditLog("DELETE_CATEGORY", req.user.email, cat.name, { shiftedTo: fallbackCat.name });
-    res.json({ success: true, message: "Category delete ho gayi aur products shift kar diye gaye." });
+    res.json({ success: true, message: "Category delete ho gayi aur products shift ho gaye." });
   } catch (err) {
     res.status(500).json({ success: false, message: "Category delete error." });
   }
 });
 
-// Orders Management
+// Orders: Get All
 app.get("/api/admin/orders", authenticate, requirePermission("manageOrders"), async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -519,6 +543,7 @@ app.get("/api/admin/orders", authenticate, requirePermission("manageOrders"), as
   }
 });
 
+// Orders: Update Status
 app.put("/api/admin/orders/:id/status", authenticate, requirePermission("manageOrders"), async (req, res) => {
   try {
     const { status } = req.body;
@@ -535,7 +560,7 @@ app.put("/api/admin/orders/:id/status", authenticate, requirePermission("manageO
   }
 });
 
-// Safe LocalStorage Data Migration to DB
+// Data Migration API (LocalStorage -> DB)
 app.post("/api/admin/migrate-local-data", authenticate, requirePermission("manageProducts"), async (req, res) => {
   try {
     const { products: localProducts, categories: localCategories } = req.body;
@@ -581,7 +606,7 @@ app.post("/api/admin/migrate-local-data", authenticate, requirePermission("manag
   }
 });
 
-/* ==================== OWNER-ONLY ADMIN CONTROLS ==================== */
+/* ==================== OWNER-ONLY APIS ==================== */
 
 app.get("/api/owner/admins", authenticate, requireOwner, async (req, res) => {
   try {
@@ -667,7 +692,7 @@ app.delete("/api/owner/admins/:id", authenticate, requireOwner, async (req, res)
 
     await User.findByIdAndDelete(req.params.id);
     await createAuditLog("DELETE_ADMIN", req.user.email, target.email);
-    res.json({ success: true, message: "Admin successfully delete ho gaya." });
+    res.json({ success: true, message: "Admin delete ho gaya." });
   } catch (err) {
     res.status(500).json({ success: false, message: "Admin delete error." });
   }
@@ -682,21 +707,34 @@ app.get("/api/owner/audit-logs", authenticate, requireOwner, async (req, res) =>
   }
 });
 
+/* ==================== STATIC FILE & FALLBACK ROUTING ==================== */
+
+// Prevent API requests or direct file extensions (.xml, .json, .ico) from hitting HTML fallback
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ success: false, message: "API endpoint nahi mila." });
+  }
+  if (req.path.includes(".")) {
+    return res.status(404).send("File not found");
+  }
+  const indexPath = fs.existsSync(path.join(publicDir, "index.html"))
+    ? path.join(publicDir, "index.html")
+    : path.join(__dirname, "index.html");
+
+  res.sendFile(indexPath);
 });
 
-/* ==================== SERVER INITIALIZATION ==================== */
+/* ==================== SERVER START ==================== */
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(async () => {
-    console.log("✅ MongoDB Atlas connected successfully.");
+    console.log("✅ MongoDB connected successfully.");
     await seedDatabase();
     app.listen(PORT, () => {
-      console.log(`🚀 Nalanda Udan Mart server active: http://localhost:${PORT}`);
+      console.log(`🚀 Nalanda Udan Mart server running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("❌ FATAL: Database connection failed. Aborting startup.", err.message);
+    console.error("❌ FATAL: Database connection failed. Server stopped.", err.message);
     process.exit(1);
   });

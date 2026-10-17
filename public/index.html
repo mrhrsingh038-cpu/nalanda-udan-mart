@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta name="google-site-verification" content="JbvB2lwatdL5Wr9EoSVTlZVI7lls3eFxWQIYSVJwsp4" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NALANDA UDAN MART | Online Shopping</title>
@@ -20,9 +19,10 @@ button{border:0;border-radius:8px;padding:12px 16px;cursor:pointer;font-weight:b
 .search input{flex:1}
 .search button{background:#ffca28;color:#222}
 
-/* Delivery charge notification bar */
-.delivery-rate-bar{background:#2e7d32;color:#fff;padding:10px 5%;display:flex;align-items:center;justify-content:space-between;font-weight:bold;font-size:15px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+/* Live Delivery charge notification bar */
+.delivery-rate-bar{background:#2e7d32;color:#fff;padding:11px 5%;display:flex;align-items:center;justify-content:space-between;font-weight:bold;font-size:15px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
 .delivery-rate-bar span.rate-tag{background:#ffca28;color:#111;padding:3px 10px;border-radius:20px;font-size:14px}
+.rate-error{background:#c62828;}
 
 .hero{background:#e0f4df;margin:20px auto;padding:28px 20px;width:92%;border-radius:15px}
 .hero h1{color:#137a3d;margin-top:0}
@@ -37,6 +37,7 @@ main{padding:0 4% 30px}
 .product-category{color:#666;font-size:13px}
 .price{color:#137a3d;font-weight:bold;font-size:19px;margin:8px 0}
 .product button{width:100%;background:#137a3d;color:white;margin-top:8px}
+.product button:disabled{background:#999;cursor:not-allowed}
 #cart{margin:22px 0}
 .cart-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #eee;padding:12px 0;flex-wrap:wrap}
 .cart-actions{display:flex;align-items:center;gap:6px}
@@ -72,9 +73,9 @@ footer{background:#174c2d;color:white;padding:22px;text-align:center}
   </div>
 </header>
 
-<!-- DELIVERY CHARGE BANNER (LIVE SYNCED) -->
+<!-- DELIVERY CHARGE BAR -->
 <div class="delivery-rate-bar" id="deliveryRateBar">
-  <span>🚚 Delivery Charge: <span id="deliveryRateDisplay">₹10</span> per KM</span>
+  <span id="deliveryRateText">🚚 Delivery Charge: <span id="deliveryRateDisplay">Loading...</span> per KM</span>
   <span class="rate-tag">Distance hisaab se</span>
 </div>
 
@@ -89,7 +90,7 @@ footer{background:#174c2d;color:white;padding:22px;text-align:center}
   <div class="categories" id="categories"></div>
   
   <h2>⭐ Products</h2>
-  <p>Admin panel se product, category, price aur photo update ki ja sakti hai.</p>
+  <p>Admin panel se update kiye gaye live products aur prices.</p>
   <div class="products" id="products"></div>
 
   <section id="cart">
@@ -97,7 +98,7 @@ footer{background:#174c2d;color:white;padding:22px;text-align:center}
     <div id="cartItems">Abhi cart khaali hai.</div>
     <h3 id="total">Subtotal: ₹0</h3>
     <div style="font-size:13px;color:#555;margin-bottom:10px;">
-      ℹ️ Delivery charge (<span id="cartRateNote">₹10/km</span>) address aur distance hisaab se dukandaar alag se bill mein jodenge.
+      ℹ️ Delivery charges (<span id="cartRateNote">₹10/km</span>) order ke address aur distance ke hisaab se alag se bataye jayenge.
     </div>
     <button type="button" class="order-btn" onclick="checkout()">Order Karein</button>
   </section>
@@ -125,9 +126,9 @@ footer{background:#174c2d;color:white;padding:22px;text-align:center}
       <p>💵 Cash on Delivery (delivery ke samay payment)</p>
       
       <h3 id="checkoutTotal">Items Subtotal: ₹0</h3>
-      <p style="font-size:13px;color:#666;margin-top:-6px;">* Delivery charges order address distance ke hisaab se alag se deya hoga.</p>
+      <p style="font-size:13px;color:#666;margin-top:-6px;">* Delivery charge distance hisaab se bill me judega.</p>
 
-      <button class="confirm-btn" type="submit">Order Confirm Karein</button>
+      <button class="confirm-btn" type="submit" id="confirmOrderBtn">Order Confirm Karein</button>
       <button class="cancel-btn" type="button" onclick="closeCheckout()">Cancel</button>
     </form>
   </section>
@@ -140,114 +141,15 @@ footer{background:#174c2d;color:white;padding:22px;text-align:center}
 </footer>
 
 <script>
-const PRODUCT_KEY = "udanProducts";
-const CATEGORY_KEY = "udanCategories";
-const ORDER_KEY = "udanOrders";
-const DELIVERY_CHARGE_KEY = "udanDeliveryChargePerKm";
-const DEFAULT_DELIVERY_CHARGE = 10;
-
-const defaultCategories = [
-  { name: "Grocery", emoji: "🌾" },
-  { name: "Vegetables", emoji: "🥦" },
-  { name: "Fruits", emoji: "🍎" },
-  { name: "Dairy", emoji: "🥛" },
-  { name: "Snacks", emoji: "🍪" },
-  { name: "Personal Care", emoji: "🧴" },
-  { name: "Household", emoji: "🧼" },
-  { name: "Stationery", emoji: "✏️" },
-  { name: "Other", emoji: "🛍️" }
-];
-
-const defaultProducts = [
-  { id: "demo1", name: "Chawal (1 kg)", price: 55, emoji: "🍚", category: "Grocery" },
-  { id: "demo2", name: "Aata (1 kg)", price: 40, emoji: "🌾", category: "Grocery" },
-  { id: "demo3", name: "Aaloo (1 kg)", price: 30, emoji: "🥔", category: "Vegetables" },
-  { id: "demo4", name: "Pyaaz (1 kg)", price: 35, emoji: "🧅", category: "Vegetables" },
-  { id: "demo5", name: "Tamatar (1 kg)", price: 40, emoji: "🍅", category: "Vegetables" },
-  { id: "demo6", name: "Daal (1 kg)", price: 100, emoji: "🫘", category: "Grocery" },
-  { id: "demo7", name: "Cooking Oil (1 L)", price: 140, emoji: "🫗", category: "Grocery" },
-  { id: "demo8", name: "Cheeni (1 kg)", price: 45, emoji: "🧂", category: "Grocery" },
-  { id: "demo9", name: "Biscuit", price: 10, emoji: "🍪", category: "Snacks" },
-  { id: "demo10", name: "Sabun", price: 35, emoji: "🧼", category: "Personal Care" },
-  { id: "demo11", name: "Doodh (500 ml)", price: 30, emoji: "🥛", category: "Dairy" },
-  { id: "demo12", name: "Toothpaste", price: 55, emoji: "🪥", category: "Personal Care" }
-];
-
 let selectedCategory = "";
 let cart = [];
-
-/* ==================== DELIVERY CHARGE LOADER ==================== */
-function loadDeliveryRate(){
-  try {
-    const saved = localStorage.getItem(DELIVERY_CHARGE_KEY);
-    if(saved !== null && saved !== ""){
-      const num = Number(saved);
-      if(Number.isFinite(num) && num >= 0) return num;
-    }
-  } catch(e) {
-    console.warn("Delivery rate reading error:", e);
-  }
-  return DEFAULT_DELIVERY_CHARGE;
-}
-
-function updateDeliveryDisplay(){
-  const rate = loadDeliveryRate();
-  const rateText = "₹" + rate;
-  
-  const barEl = document.getElementById("deliveryRateDisplay");
-  if(barEl) barEl.textContent = rateText;
-
-  const cartNote = document.getElementById("cartRateNote");
-  if(cartNote) cartNote.textContent = rateText + "/km";
-
-  const checkoutNote = document.getElementById("checkoutRateNote");
-  if(checkoutNote) checkoutNote.textContent = rateText;
-}
-
-function readArray(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback.map(x => ({ ...x }));
-    const v = JSON.parse(raw);
-    return Array.isArray(v) && v.length ? v : fallback.map(x => ({ ...x }));
-  } catch (err) {
-    return fallback.map(x => ({ ...x }));
-  }
-}
-
-function loadProducts() {
-  return readArray(PRODUCT_KEY, defaultProducts)
-    .filter(p => p && typeof p === "object" && p.name && Number.isFinite(Number(p.price)))
-    .map((p, i) => {
-      const photoStr = typeof p.photo === "string" ? p.photo.trim() : "";
-      return {
-        ...p,
-        id: String(p.id !== undefined && p.id !== null ? p.id : "prod_" + i),
-        name: String(p.name),
-        price: Number(p.price),
-        category: p.category ? String(p.category) : "Other",
-        emoji: p.emoji ? String(p.emoji) : "🛍️",
-        photo: photoStr
-      };
-    });
-}
-
-function loadCategories() {
-  return readArray(CATEGORY_KEY, defaultCategories)
-    .filter(c => c && typeof c === "object" && c.name)
-    .map(c => ({
-      name: String(c.name).trim(),
-      emoji: c.emoji ? String(c.emoji) : "🛍️"
-    }));
-}
+let products = [];
+let categories = [];
+let currentRate = 10;
 
 function escapeHTML(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
 
@@ -257,18 +159,75 @@ function money(v) {
   return "₹" + n.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
 
-function isValidPhotoUrl(url) {
-  if (!url || typeof url !== "string") return false;
-  return url.startsWith("data:image/") || url.startsWith("http://") || url.startsWith("https://") || url.startsWith("./") || url.startsWith("/");
+/* ==================== DIRECT DATABASE API SYNC ==================== */
+
+async function fetchDeliveryRate(){
+  try {
+    const res = await fetch("/api/delivery-charge");
+    const data = await res.json();
+    if(data.success && Number.isFinite(data.rate)){
+      currentRate = data.rate;
+      document.getElementById("deliveryRateBar").classList.remove("rate-error");
+      document.getElementById("deliveryRateDisplay").textContent = "₹" + currentRate;
+      document.getElementById("cartRateNote").textContent = "₹" + currentRate + "/km";
+      document.getElementById("checkoutRateNote").textContent = "₹" + currentRate;
+    } else {
+      throw new Error();
+    }
+  } catch(e){
+    document.getElementById("deliveryRateBar").classList.add("rate-error");
+    document.getElementById("deliveryRateDisplay").textContent = "₹10 (Offline)";
+    document.getElementById("cartRateNote").textContent = "₹10/km";
+    document.getElementById("checkoutRateNote").textContent = "₹10";
+  }
+}
+
+async function fetchCategories(){
+  try {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    if(data.success && Array.isArray(data.categories)){
+      categories = data.categories;
+    }
+  } catch(e){
+    console.error("Categories fetch failed:", e);
+  }
+  renderCategories();
+}
+
+async function fetchProducts(){
+  try {
+    const res = await fetch("/api/products");
+    const data = await res.json();
+    if(data.success && Array.isArray(data.products)){
+      products = data.products;
+      // Agar cart me koi item hai jiska price admin ne badal diya ho, toh cart price sync karein
+      syncCartPricesWithDatabase();
+    }
+  } catch(e){
+    console.error("Products fetch failed:", e);
+  }
+  showProducts();
+}
+
+function syncCartPricesWithDatabase(){
+  if(!cart.length || !products.length) return;
+  cart.forEach(item => {
+    const fresh = products.find(p => String(p._id || p.id) === String(item.id));
+    if(fresh){
+      item.price = Number(fresh.price);
+      item.name = fresh.name;
+    }
+  });
+  showCart();
 }
 
 function renderCategories() {
-  const cats = loadCategories();
   const box = document.getElementById("categories");
   if (!box) return;
 
   let html = `<div class="category ${selectedCategory === "" ? "active" : ""}" onclick="selectCategory('')"><div class="emoji">🛍️</div>All Products</div>`;
-  html += cats.map(c => {
+  html += categories.map(c => {
     const escapedName = escapeHTML(c.name);
     const escapedEmoji = escapeHTML(c.emoji);
     const jsonParam = JSON.stringify(c.name).replace(/"/g, '&quot;');
@@ -279,15 +238,14 @@ function renderCategories() {
 }
 
 function showProducts() {
-  const products = loadProducts();
   const searchInput = document.getElementById("search");
   const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const box = document.getElementById("products");
   if (!box) return;
 
   const filtered = products.filter(p => {
-    const matchCat = !selectedCategory || p.category.toLowerCase() === selectedCategory.toLowerCase();
-    const matchSearch = !term || p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term);
+    const matchCat = !selectedCategory || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
+    const matchSearch = !term || (p.name && p.name.toLowerCase().includes(term));
     return matchCat && matchSearch;
   });
 
@@ -295,43 +253,44 @@ function showProducts() {
     box.innerHTML = "<p>Koi product nahi mila.</p>";
   } else {
     box.innerHTML = filtered.map(p => {
-      const photoHtml = isValidPhotoUrl(p.photo)
+      const isAvailable = p.isAvailable !== false && (p.stock === undefined || p.stock > 0);
+      const photoHtml = p.photo && (p.photo.startsWith("data:image/") || p.photo.startsWith("http"))
         ? `<img class="product-photo" src="${escapeHTML(p.photo)}" alt="${escapeHTML(p.name)}">`
-        : `<div class="emoji">${escapeHTML(p.emoji)}</div>`;
+        : `<div class="emoji">${escapeHTML(p.emoji || "🛍️")}</div>`;
       
-      const jsonId = JSON.stringify(p.id).replace(/"/g, '&quot;');
+      const jsonId = JSON.stringify(p._id || p.id).replace(/"/g, '&quot;');
 
       return `<div class="product">
         ${photoHtml}
         <h3>${escapeHTML(p.name)}</h3>
         <div class="product-category">${escapeHTML(p.category)}</div>
         <div class="price">${money(p.price)}</div>
-        <button type="button" onclick="addToCart(${jsonId})">+ Cart Mein Jodein</button>
+        ${isAvailable 
+          ? `<button type="button" onclick="addToCart(${jsonId})">+ Cart Mein Jodein</button>`
+          : `<button type="button" disabled style="background:#999;cursor:not-allowed;">Out of Stock</button>`}
       </div>`;
     }).join("");
   }
-
-  renderCategories();
 }
 
 function selectCategory(name) {
   selectedCategory = name ? String(name) : "";
+  renderCategories();
   showProducts();
 }
 
 function addToCart(id) {
-  const products = loadProducts();
-  const p = products.find(x => String(x.id) === String(id));
+  const p = products.find(x => String(x._id || x.id) === String(id));
   if (!p) {
-    alert("Product nahi mila. Page refresh karke try karein.");
+    alert("Product uplabdh nahi hai.");
     return;
   }
-  const existing = cart.find(x => String(x.id) === String(p.id));
+  const existing = cart.find(x => String(x.id) === String(p._id || p.id));
   if (existing) {
     existing.qty++;
   } else {
     cart.push({
-      id: String(p.id),
+      id: String(p._id || p.id),
       name: p.name,
       price: Number(p.price),
       qty: 1
@@ -374,9 +333,7 @@ function showCart() {
 function changeQty(index, delta) {
   if (!cart[index]) return;
   cart[index].qty += delta;
-  if (cart[index].qty <= 0) {
-    cart.splice(index, 1);
-  }
+  if (cart[index].qty <= 0) cart.splice(index, 1);
   showCart();
 }
 
@@ -401,103 +358,83 @@ function checkout() {
 
 function closeCheckout() {
   const formSection = document.getElementById("checkoutForm");
-  if (formSection) {
-    formSection.style.display = "none";
-  }
+  if (formSection) formSection.style.display = "none";
 }
 
-const orderForm = document.getElementById("orderForm");
-if (orderForm) {
-  orderForm.addEventListener("submit", function(event) {
-    event.preventDefault();
-    if (!cart.length) {
-      alert("Cart khaali hai.");
-      closeCheckout();
-      return;
-    }
+document.getElementById("orderForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  if (!cart.length) {
+    alert("Cart khaali hai.");
+    closeCheckout();
+    return;
+  }
 
-    const nameEl = document.getElementById("customerName");
-    const phoneEl = document.getElementById("customerPhone");
-    const addrEl = document.getElementById("customerAddress");
+  const btn = document.getElementById("confirmOrderBtn");
+  btn.disabled = true;
+  btn.textContent = "Order Verify Ho Raha Hai...";
 
-    const name = nameEl ? nameEl.value.trim() : "";
-    const phone = phoneEl ? phoneEl.value.trim() : "";
-    const address = addrEl ? addrEl.value.trim() : "";
+  const customerName = document.getElementById("customerName").value.trim();
+  const phone = document.getElementById("customerPhone").value.trim();
+  const address = document.getElementById("customerAddress").value.trim();
 
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!name || !phoneRegex.test(phone) || !address) {
-      alert("Kripya sahi poora naam, 10-digit mobile number (6, 7, 8 ya 9 se shuru) aur delivery address bhariye.");
-      return;
-    }
+  const phoneRegex = /^[6-9]\d{9}$/;
+  if (!customerName || !phoneRegex.test(phone) || !address) {
+    alert("Kripya sahi 10-digit mobile number aur poora address bhariye.");
+    btn.disabled = false;
+    btn.textContent = "Order Confirm Karein";
+    return;
+  }
 
-    const currentRate = loadDeliveryRate();
-    const order = {
-      orderId: "UM" + Date.now(),
-      customerName: name,
-      phone: phone,
-      address: address,
-      paymentMethod: "Cash on Delivery",
-      items: cart.map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        qty: p.qty
-      })),
-      total: totalAmount(),
-      status: "Pending",
-      createdAt: new Date().toLocaleString("en-IN")
-    };
+  // Exact database object ID and quantities payload
+  const orderPayload = {
+    customerName,
+    phone,
+    address,
+    paymentMethod: "Cash on Delivery",
+    items: cart.map(i => ({
+      id: i.id,
+      name: i.name,
+      qty: i.qty
+    }))
+  };
 
-    try {
-      let orders = [];
-      const storedOrders = localStorage.getItem(ORDER_KEY);
-      if (storedOrders) {
-        try {
-          const parsed = JSON.parse(storedOrders);
-          if (Array.isArray(parsed)) orders = parsed;
-        } catch (e) {
-          orders = [];
-        }
-      }
-      orders.push(order);
-      localStorage.setItem(ORDER_KEY, JSON.stringify(orders));
-
-      alert("Order safalta-purvak place ho gaya!\nOrder ID: " + order.orderId + "\nItems Total: " + money(order.total) + "\n\n(Delivery charge rate ₹" + currentRate + "/km ke hisaab se dukandaar aapke location ke anusaar confirm karenge.)");
-
+  try {
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload)
+    });
+    const data = await res.json();
+    if(data.success && data.order){
+      alert(`Order Safalta-purvak Place Ho Gaya!\n\nOrder ID: ${data.order.orderId}\nServer Verified Subtotal: ${money(data.order.subtotal || data.order.total)}\n\n(Delivery charge ₹${data.order.deliveryRateAtOrder}/km ke hisaab se merchant confirm karenge.)`);
       cart = [];
       showCart();
-      orderForm.reset();
+      document.getElementById("orderForm").reset();
       closeCheckout();
-    } catch (err) {
-      alert("Order save nahi ho saka. Kripya browser storage settings check karein.");
+    } else {
+      alert("Order Error: " + (data.message || "Order place nahi ho saka."));
     }
-  });
-}
-
-const searchInputEl = document.getElementById("search");
-if (searchInputEl) {
-  searchInputEl.addEventListener("input", showProducts);
-}
-
-// Storage event listener for live cross-tab sync
-window.addEventListener("storage", function(e) {
-  if (e.key === PRODUCT_KEY || e.key === CATEGORY_KEY) {
-    if (selectedCategory && !loadCategories().some(c => c.name.toLowerCase() === selectedCategory.toLowerCase())) {
-      selectedCategory = "";
-    }
-    renderCategories();
-    showProducts();
-  }
-  if (e.key === DELIVERY_CHARGE_KEY) {
-    updateDeliveryDisplay();
+  } catch(err){
+    alert("Server connect nahi hua. Kripya connection check karein.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Order Confirm Karein";
   }
 });
 
-// Initialization
-updateDeliveryDisplay();
-renderCategories();
-showProducts();
+document.getElementById("search").addEventListener("input", showProducts);
+
+// Load everything on startup
+fetchDeliveryRate();
+fetchCategories();
+fetchProducts();
 showCart();
+
+// Live background refresh every 20 seconds for multi-device sync
+setInterval(() => {
+  fetchDeliveryRate();
+  fetchProducts();
+}, 20000);
 </script>
 </body>
 </html>
