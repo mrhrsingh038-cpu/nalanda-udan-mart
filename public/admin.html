@@ -37,9 +37,9 @@
     #photoPreview { display: none; width: 140px; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; }
     .order { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-top: 14px; overflow-wrap: anywhere; background: #fff; }
     .order-status { font-weight: bold; color: #137a3d; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
     .stat { background: #e0f4df; padding: 15px; border-radius: 10px; text-align: center; }
-    .stat strong { display: block; font-size: 26px; color: #137a3d; margin-top: 6px; }
+    .stat strong { display: block; font-size: 24px; color: #137a3d; margin-top: 6px; }
     .small-btn { padding: 8px 12px; font-size: 13px; }
     .rate-badge { display: inline-block; background: #e0f4df; color: #137a3d; padding: 6px 12px; border-radius: 6px; font-size: 15px; font-weight: bold; margin-top: 4px; }
     #loginView { max-width: 420px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
@@ -72,7 +72,6 @@
   </div>
 </header>
 
-<!-- LOGIN VIEW -->
 <div id="loginView">
   <h2 style="margin-top:0; color:#137a3d;">🔒 Secure Admin Login</h2>
   <p class="hint">Nalanda Udan Mart Dashboard access karne ke liye login karein.</p>
@@ -89,17 +88,8 @@
   </form>
 </div>
 
-<!-- DASHBOARD VIEW -->
 <main id="dashboardView" style="display: none;">
 
-  <!-- MIGRATION TOOL NOTICE -->
-  <section class="panel" id="migrationSection" style="background:#fffde7; border: 1px solid #fff59d;">
-    <h3 style="margin-top:0;">📦 Browser LocalStorage to MongoDB Migration</h3>
-    <p class="hint" style="color:#795548;">Agar aapke is browser mein purane udanProducts ya categories save hain, toh unhe bina kisi duplicate loss ke database me transfer karein.</p>
-    <button type="button" class="small-btn" onclick="runDataMigration()">Transfer Local Products to Database</button>
-  </section>
-
-  <!-- OWNER ONLY SECTION -->
   <section class="panel" id="ownerSection" style="display: none; border: 2px solid #137a3d;">
     <h2>👑 Owner Control: Admin Management</h2>
     <p class="hint">Admins banayein, permissions assign karein aur audit trail dekhein.</p>
@@ -120,7 +110,7 @@
         </div>
       </div>
 
-      <label>Permissions (Kaunse sections access kar sakte hain?):</label>
+      <label>Permissions:</label>
       <div class="checkbox-group">
         <label><input type="checkbox" id="permProducts" checked> Products Management</label>
         <label><input type="checkbox" id="permCategories" checked> Categories Management</label>
@@ -134,7 +124,7 @@
     <h3 style="margin-top: 25px;">Maujooda Admins List</h3>
     <div id="adminList">Loading admins...</div>
 
-    <h3 style="margin-top: 25px;">🛡️ Security Audit Logs (Last 100 Actions)</h3>
+    <h3 style="margin-top: 25px;">🛡️ Security Audit Logs</h3>
     <div style="overflow-x: auto;">
       <table class="audit-table">
         <thead>
@@ -166,23 +156,30 @@
 
   <!-- ORDER DASHBOARD -->
   <section class="panel" id="ordersSection">
-    <h2>📦 Customer Orders Dashboard</h2>
-    <p class="hint">Customer ke aane wale orders dekhein aur status update karein.</p>
+    <h2>📦 Customer Orders Lifecycle Dashboard</h2>
+    <p class="hint">Orders accept/reject karein, preparing ya out for delivery status set karein.</p>
 
     <div class="stats">
       <div class="stat">Total Orders <strong id="totalOrders">0</strong></div>
-      <div class="stat">Pending Orders <strong id="pendingOrders">0</strong></div>
-      <div class="stat">Accepted Orders <strong id="acceptedOrders">0</strong></div>
-      <div class="stat">Delivered Orders <strong id="deliveredOrders">0</strong></div>
+      <div class="stat">New/Pending <strong id="pendingOrders">0</strong></div>
+      <div class="stat">Accepted <strong id="acceptedOrders">0</strong></div>
+      <div class="stat">Preparing <strong id="preparingOrders">0</strong></div>
+      <div class="stat">Out for Delivery <strong id="outOrders">0</strong></div>
+      <div class="stat">Delivered <strong id="deliveredOrders">0</strong></div>
+      <div class="stat">Cancelled/Rejected <strong id="cancelledOrders">0</strong></div>
     </div>
 
     <label for="orderFilter">Status ke hisaab se filter karein</label>
     <select id="orderFilter">
       <option value="All">Sabhi Orders</option>
+      <option value="Order Placed">Order Placed</option>
       <option value="Pending">Pending</option>
       <option value="Accepted">Accepted</option>
+      <option value="Preparing">Preparing</option>
+      <option value="Out for Delivery">Out for Delivery</option>
       <option value="Delivered">Delivered</option>
       <option value="Cancelled">Cancelled</option>
+      <option value="Rejected">Rejected</option>
     </select>
 
     <button type="button" id="refreshOrdersBtn">🔄 Orders Refresh Karein</button>
@@ -192,8 +189,6 @@
   <!-- CATEGORY MANAGEMENT -->
   <section class="panel" id="categoriesSection">
     <h2>🗂️ Category Management</h2>
-    <p class="hint">Nayi category add karein ya purani delete karein.</p>
-    
     <form id="categoryForm">
       <label for="categoryName">Category ka naam</label>
       <input id="categoryName" maxlength="40" placeholder="Jaise Beverages" required>
@@ -205,7 +200,6 @@
         <button type="submit">➕ Category Add Karein</button>
       </div>
     </form>
-    
     <div id="categoryList"></div>
   </section>
 
@@ -244,8 +238,6 @@
   <!-- PRODUCT LIST & INVENTORY -->
   <section class="panel" id="productListSection">
     <h2>🛍️ Inventory, Stock aur Price Management</h2>
-    <p class="hint">Price, stock aur availability real-time database mein update karein.</p>
-    
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
       <div style="flex:1; min-width:200px;">
         <label for="productSearchInput">Product Search</label>
@@ -256,7 +248,6 @@
         <select id="productCategoryFilter"><option value="All">Sabhi Categories</option></select>
       </div>
     </div>
-    
     <div id="products"></div>
   </section>
 
@@ -372,7 +363,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ==================== OWNER ADMIN CONTROLS ==================== */
+/* ==================== OWNER CONTROLS ==================== */
 
 async function loadOwnerData(){
   if(currentUser.role !== "owner") return;
@@ -398,12 +389,6 @@ async function loadOwnerAdmins(){
             <strong>${escapeHTML(adm.name)} (${escapeHTML(adm.email)})</strong>
             <span>Status: <b style="color:${adm.isActive ? '#137a3d':'#c62828'}">${adm.isActive ? 'Active' : 'Disabled'}</b></span>
           </div>
-          <p style="font-size:13px; color:#555; margin:6px 0;">
-            Permissions: Products (${adm.permissions.manageProducts ? '✔️':'❌'}),
-            Categories (${adm.permissions.manageCategories ? '✔️':'❌'}),
-            Orders (${adm.permissions.manageOrders ? '✔️':'❌'}),
-            Delivery Rate (${adm.permissions.manageDeliveryCharge ? '✔️':'❌'})
-          </p>
           <div style="margin-top:8px;">
             <button type="button" class="small-btn ${adm.isActive ? 'secondary' : ''}" onclick="toggleAdminStatus('${adm._id}', ${!adm.isActive})">
               ${adm.isActive ? 'Revoke / Disable' : 'Restore / Enable'}
@@ -461,7 +446,7 @@ document.getElementById("createAdminForm").addEventListener("submit", async (e) 
     });
     const data = await res.json();
     if(data.success){
-      alert("Naya admin account safalta-purvak ban gaya.");
+      alert("Naya admin account ban gaya.");
       document.getElementById("createAdminForm").reset();
       loadOwnerData();
     } else {
@@ -485,11 +470,11 @@ async function toggleAdminStatus(id, newStatus){
     const data = await res.json();
     if(data.success) loadOwnerData();
     else alert(data.message);
-  } catch(e){ alert("Status change error"); }
+  } catch(e){ alert("Status error"); }
 }
 
 async function deleteAdmin(id){
-  if(!confirm("Kya aap is admin ko sach mein delete karna chahte hain?")) return;
+  if(!confirm("Admin delete karna chahte hain?")) return;
   try {
     const res = await fetch(`/api/owner/admins/${id}`, {
       method: "DELETE",
@@ -537,11 +522,11 @@ document.getElementById("deliveryChargeForm").addEventListener("submit", async (
       alert(data.message);
     }
   } catch(e){
-    alert("Delivery charge save nahi ho paya.");
+    alert("Delivery charge save error.");
   }
 });
 
-/* ==================== PRODUCTS & INVENTORY ==================== */
+/* ==================== PRODUCTS & ORDERS ==================== */
 
 async function loadAllData(){
   fetchDeliveryCharge();
@@ -606,7 +591,7 @@ document.getElementById("categoryForm").addEventListener("submit", async (e) => 
 });
 
 async function deleteCategory(id){
-  if(!confirm("Category delete karne par iske products doosri category mein move honge. Confirm?")) return;
+  if(!confirm("Category delete karein? Products move ho jayenge.")) return;
   try {
     const res = await fetch(`/api/admin/categories/${id}`, {
       method: "DELETE",
@@ -687,7 +672,7 @@ async function quickUpdate(id){
     });
     const data = await res.json();
     if(data.success){
-      alert("Database mein Price aur Stock update ho gaya.");
+      alert("Database mein update ho gaya.");
       loadProducts();
     } else alert(data.message);
   } catch(e){ alert("Update error"); }
@@ -706,11 +691,11 @@ async function toggleAvailability(id, isAvailable){
     const data = await res.json();
     if(data.success) loadProducts();
     else alert(data.message);
-  } catch(e){ alert("Stock status toggle error"); }
+  } catch(e){ alert("Stock error"); }
 }
 
 async function deleteProduct(id){
-  if(!confirm("Kya aap is product ko database se delete karna chahte hain?")) return;
+  if(!confirm("Product delete karein?")) return;
   try {
     const res = await fetch(`/api/admin/products/${id}`, {
       method: "DELETE",
@@ -794,11 +779,11 @@ document.getElementById("productForm").addEventListener("submit", async (e) => {
     });
     const data = await res.json();
     if(data.success){
-      alert("Product successfully save ho gaya.");
+      alert("Product save ho gaya.");
       document.getElementById("cancelEdit").click();
       loadProducts();
     } else alert(data.message);
-  } catch(e){ alert("Save product error."); }
+  } catch(e){ alert("Save error."); }
 });
 
 /* ==================== ORDERS DASHBOARD ==================== */
@@ -817,10 +802,14 @@ async function loadOrders(){
 
 function renderOrders(){
   const filter = document.getElementById("orderFilter").value;
+  
   document.getElementById("totalOrders").textContent = orders.length;
-  document.getElementById("pendingOrders").textContent = orders.filter(o => o.status === "Pending").length;
+  document.getElementById("pendingOrders").textContent = orders.filter(o => o.status === "Pending" || o.status === "Order Placed").length;
   document.getElementById("acceptedOrders").textContent = orders.filter(o => o.status === "Accepted").length;
+  document.getElementById("preparingOrders").textContent = orders.filter(o => o.status === "Preparing").length;
+  document.getElementById("outOrders").textContent = orders.filter(o => o.status === "Out for Delivery").length;
   document.getElementById("deliveredOrders").textContent = orders.filter(o => o.status === "Delivered").length;
+  document.getElementById("cancelledOrders").textContent = orders.filter(o => o.status === "Cancelled" || o.status === "Rejected").length;
 
   const shown = orders.filter(o => filter === "All" || o.status === filter);
   const box = document.getElementById("orders");
@@ -829,35 +818,63 @@ function renderOrders(){
     return;
   }
 
-  box.innerHTML = shown.map(o => `
-    <div class="order">
-      <h3>Order ID: ${escapeHTML(o.orderId)}</h3>
-      <p class="order-status">Status: ${escapeHTML(o.status)}</p>
-      <p><b>Customer:</b> ${escapeHTML(o.customerName)} | <b>Mobile:</b> ${escapeHTML(o.phone)}</p>
-      <p><b>Delivery Address:</b> ${escapeHTML(o.address)}</p>
-      <p><b>Items:</b></p>
-      <ul>
-        ${(o.items || []).map(i => `<li>${escapeHTML(i.name)} × ${i.qty} =${money(i.price * i.qty)}</li>`).join("")}
-      </ul>
-      <h3>Subtotal: ${money(o.subtotal || o.total)}</h3>
-      <p style="font-size:13px; color:#555;">Delivery Rate Reference: ₹${o.deliveryRateAtOrder || 10}/km</p>
-      
-      <label>Order Status Badlein</label>
-      <select id="status-${o._id}">
-        <option value="Pending" ${o.status === "Pending" ? "selected":""}>Pending</option>
-        <option value="Accepted" ${o.status === "Accepted" ? "selected":""}>Accepted</option>
-        <option value="Delivered" ${o.status === "Delivered" ? "selected":""}>Delivered</option>
-        <option value="Cancelled" ${o.status === "Cancelled" ? "selected":""}>Cancelled</option>
-      </select>
-      <div style="margin-top:8px;">
-        <button type="button" class="small-btn" onclick="saveOrderStatus('${o._id}')">Status Save Karein</button>
+  box.innerHTML = shown.map(o => {
+    const isTerminal = ["Delivered", "Cancelled", "Rejected"].includes(o.status);
+
+    return `
+      <div class="order">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+          <h3 style="margin:0;">Order ID: ${escapeHTML(o.orderId)}</h3>
+          <span style="font-weight:bold; color:#137a3d;">Status: ${escapeHTML(o.status)}</span>
+        </div>
+        <p style="margin:6px 0;"><b>Customer:</b> ${escapeHTML(o.customerName)} | <b>Mobile:</b> ${escapeHTML(o.phone)}</p>
+        <p style="margin:6px 0;"><b>Address:</b> ${escapeHTML(o.address)}</p>
+        <p style="margin:6px 0;"><b>Items:</b></p>
+        <ul>
+          ${(o.items || []).map(i => `<li>${escapeHTML(i.name)} × ${i.qty} =${money(i.price * i.qty)}</li>`).join("")}
+        </ul>
+        <h3>Subtotal: ${money(o.subtotal || o.total)}</h3>
+        <p style="font-size:13px; color:#555;">Delivery Rate: ₹${o.deliveryRateAtOrder || 10}/km</p>
+        ${o.rejectionReason ? `<p style="color:#c62828;"><b>Rejection Reason:</b> ${escapeHTML(o.rejectionReason)}</p>` : ''}
+        
+        <label>Update Status</label>
+        <select id="status-${o._id}" ${isTerminal ? 'disabled' : ''} onchange="toggleRejectionBox('${o._id}')">
+          <option value="Order Placed" ${o.status === "Order Placed" ? "selected":""}>Order Placed</option>
+          <option value="Pending" ${o.status === "Pending" ? "selected":""}>Pending</option>
+          <option value="Accepted" ${o.status === "Accepted" ? "selected":""}>Accepted</option>
+          <option value="Preparing" ${o.status === "Preparing" ? "selected":""}>Preparing</option>
+          <option value="Out for Delivery" ${o.status === "Out for Delivery" ? "selected":""}>Out for Delivery</option>
+          <option value="Delivered" ${o.status === "Delivered" ? "selected":""}>Delivered</option>
+          <option value="Cancelled" ${o.status === "Cancelled" ? "selected":""}>Cancelled</option>
+          <option value="Rejected" ${o.status === "Rejected" ? "selected":""}>Rejected</option>
+        </select>
+
+        <div id="rejectBox-${o._id}" style="display:none; margin-top:8px;">
+          <label>Rejection Reason</label>
+          <input type="text" id="reason-${o._id}" placeholder="Out of delivery area, item unavailable etc.">
+        </div>
+
+        <div style="margin-top:8px;">
+          ${!isTerminal ? `<button type="button" class="small-btn" onclick="saveOrderStatus('${o._id}')">Status Save Karein</button>` : `<span style="font-size:13px;color:#777;">(Terminal Status - No further edits allowed)</span>`}
+        </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
+}
+
+function toggleRejectionBox(id){
+  const sel = document.getElementById("status-" + id);
+  const box = document.getElementById("rejectBox-" + id);
+  if(sel && box){
+    box.style.display = sel.value === "Rejected" ? "block" : "none";
+  }
 }
 
 async function saveOrderStatus(id){
   const status = document.getElementById("status-" + id).value;
+  const reasonInput = document.getElementById("reason-" + id);
+  const rejectionReason = reasonInput ? reasonInput.value.trim() : "";
+
   try {
     const res = await fetch(`/api/admin/orders/${id}/status`, {
       method: "PUT",
@@ -865,11 +882,11 @@ async function saveOrderStatus(id){
         "Content-Type": "application/json",
         "Authorization": `Bearer ${currentToken}`
       },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, rejectionReason })
     });
     const data = await res.json();
     if(data.success){
-      alert("Order status update ho gaya.");
+      alert("Order status update ho gaya aur customer tracking me sync ho gaya.");
       loadOrders();
     } else alert(data.message);
   } catch(e){ alert("Update status error"); }
@@ -877,40 +894,6 @@ async function saveOrderStatus(id){
 
 document.getElementById("orderFilter").addEventListener("change", renderOrders);
 document.getElementById("refreshOrdersBtn").addEventListener("click", loadOrders);
-
-/* ==================== SAFE DATA MIGRATION ==================== */
-
-async function runDataMigration(){
-  const localProdRaw = localStorage.getItem("udanProducts");
-  const localCatRaw = localStorage.getItem("udanCategories");
-
-  let localProds = [];
-  let localCats = [];
-
-  try { if(localProdRaw) localProds = JSON.parse(localProdRaw); } catch(e){}
-  try { if(localCatRaw) localCats = JSON.parse(localCatRaw); } catch(e){}
-
-  if(!localProds.length && !localCats.length){
-    alert("Is browser ke localStorage mein koi purana data nahi mila.");
-    return;
-  }
-
-  if(!confirm(`Kya aap ${localProds.length} products aur ${localCats.length} categories database mein transfer karna chahte hain?`)) return;
-
-  try {
-    const res = await fetch("/api/admin/migrate-local-data", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ products: localProds, categories: localCats })
-    });
-    const data = await res.json();
-    alert(data.message);
-    loadAllData();
-  } catch(e){ alert("Migration request fail hui."); }
-}
 
 checkAuthSession();
 </script>
