@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nalanda Udan Mart - Secure Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f1; color: #222; }
+    header { background: #137a3d; color: white; text-align: center; padding: 20px; }
+    header a { color: white; display: inline-block; margin-top: 8px; text-decoration: underline; font-weight: bold; }
+    .header-user { margin-top: 10px; font-size: 14px; background: rgba(0,0,0,0.2); display: inline-block; padding: 6px 14px; border-radius: 20px; }
+    .logout-btn { background: #c62828; color: white; border: 0; padding: 5px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; font-size: 13px; font-weight: bold; }
+    main { max-width: 1000px; margin: 25px auto; padding: 16px; }
+    .panel { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    #productForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+    #productForm label, #productForm input, #productForm select, #productForm p, #productForm button, #photoPreview { min-width: 0; }
+    #productForm #photo, #productForm #photoHint, #productForm .hint, #productForm #photoPreview, #productForm .btn-group { grid-column: 1 / -1; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    @media(max-width: 600px){ #productForm { grid-template-columns: 1fr; } }
+    label { display: block; font-weight: bold; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 12px; margin: 7px 0 12px; border: 1px solid #ccc; border-radius: 7px; font-size: 16px; font-family: inherit; }
+    button { background: #137a3d; color: white; border: 0; padding: 11px 14px; border-radius: 7px; cursor: pointer; margin: 3px; font-weight: bold; font-size: 14px; transition: opacity 0.2s; }
+    button:hover { opacity: 0.9; }
+    .delete { background: #c62828; }
+    .secondary { background: #555; }
+    .hint { color: #555; font-size: 13px; line-height: 1.5; margin: 4px 0 8px; }
+    .product { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin-top: 12px; display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 14px; background: #fff; }
+    .product-photo { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; background: #eee; }
+    .product-info { min-width: 0; }
+    .product-info h3 { margin: 0 0 6px 0; }
+    .price { color: #137a3d; font-weight: bold; font-size: 18px; }
+    .category-card { border: 1px solid #ddd; border-radius: 9px; padding: 12px; margin: 8px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fafafa; }
+    .category-card .cat-emoji { font-size: 26px; }
+    .category-card .cat-name { font-weight: bold; flex: 1; min-width: 120px; font-size: 16px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    #photoPreview { display: none; width: 140px; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; }
+    .order { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-top: 14px; overflow-wrap: anywhere; background: #fff; }
+    .order-status { font-weight: bold; color: #137a3d; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .stat { background: #e0f4df; padding: 15px; border-radius: 10px; text-align: center; }
+    .stat strong { display: block; font-size: 26px; color: #137a3d; margin-top: 6px; }
+    .small-btn { padding: 8px 12px; font-size: 13px; }
+    .rate-badge { display: inline-block; background: #e0f4df; color: #137a3d; padding: 6px 12px; border-radius: 6px; font-size: 15px; font-weight: bold; margin-top: 4px; }
+    #loginView { max-width: 420px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .login-error { color: #c62828; font-weight: bold; font-size: 14px; margin-top: 10px; display: none; }
+    .admin-card { border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin-top: 12px; background: #fbfbfb; }
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
+    .checkbox-group label { display: flex; align-items: center; gap: 8px; font-weight: normal; margin: 0; cursor: pointer; }
+    .checkbox-group input { width: auto; margin: 0; }
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    .audit-table th, .audit-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .audit-table th { background: #f0f0f0; }
+    @media(max-width: 520px){
+      main { padding: 10px; }
+      .panel { padding: 15px; }
+      .product { grid-template-columns: 78px minmax(0,1fr); gap: 10px; }
+      .product-photo { width: 78px; height: 78px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🛒 NALANDA UDAN MART</h1>
+  <h2>Admin Panel</h2>
+  <a href="index.html">Customer Website par Jayein</a>
+  <div id="headerUserInfo" class="header-user" style="display: none;">
+    <span id="userNameRole">Logged in</span>
+    <button type="button" class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<!-- LOGIN VIEW -->
+<div id="loginView">
+  <h2 style="margin-top:0; color:#137a3d;">🔒 Secure Admin Login</h2>
+  <p class="hint">Nalanda Udan Mart Dashboard access karne ke liye login karein.</p>
+  
+  <form id="loginForm">
+    <label for="loginEmail">Email / Username</label>
+    <input type="email" id="loginEmail" placeholder="admin@udanmart.com" required>
+
+    <label for="loginPassword">Password</label>
+    <input type="password" id="loginPassword" placeholder="••••••••" required>
+
+    <button type="submit" style="width: 100%; margin-top: 10px;">Login Karein</button>
+    <div id="loginError" class="login-error"></div>
+  </form>
+</div>
+
+<!-- DASHBOARD VIEW -->
+<main id="dashboardView" style="display: none;">
+
+  <!-- MIGRATION TOOL NOTICE -->
+  <section class="panel" id="migrationSection" style="background:#fffde7; border: 1px solid #fff59d;">
+    <h3 style="margin-top:0;">📦 Browser LocalStorage to MongoDB Migration</h3>
+    <p class="hint" style="color:#795548;">Agar aapke is browser mein purane udanProducts ya categories save hain, toh unhe bina kisi duplicate loss ke database me transfer karein.</p>
+    <button type="button" class="small-btn" onclick="runDataMigration()">Transfer Local Products to Database</button>
+  </section>
+
+  <!-- OWNER ONLY SECTION -->
+  <section class="panel" id="ownerSection" style="display: none; border: 2px solid #137a3d;">
+    <h2>👑 Owner Control: Admin Management</h2>
+    <p class="hint">Admins banayein, permissions assign karein aur audit trail dekhein.</p>
+
+    <form id="createAdminForm">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+        <div>
+          <label for="adminName">Admin ka Naam</label>
+          <input id="adminName" placeholder="Jaise Rahul Kumar" required>
+        </div>
+        <div>
+          <label for="adminEmail">Email ID</label>
+          <input id="adminEmail" type="email" placeholder="rahul@udanmart.com" required>
+        </div>
+        <div>
+          <label for="adminTempPassword">Temporary Password</label>
+          <input id="adminTempPassword" type="password" placeholder="Min 6 characters" required>
+        </div>
+      </div>
+
+      <label>Permissions (Kaunse sections access kar sakte hain?):</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="permProducts" checked> Products Management</label>
+        <label><input type="checkbox" id="permCategories" checked> Categories Management</label>
+        <label><input type="checkbox" id="permOrders" checked> Orders Management</label>
+        <label><input type="checkbox" id="permDeliveryCharge"> Delivery Charge Change</label>
+      </div>
+
+      <button type="submit">➕ Naya Admin Banayein</button>
+    </form>
+
+    <h3 style="margin-top: 25px;">Maujooda Admins List</h3>
+    <div id="adminList">Loading admins...</div>
+
+    <h3 style="margin-top: 25px;">🛡️ Security Audit Logs (Last 100 Actions)</h3>
+    <div style="overflow-x: auto;">
+      <table class="audit-table">
+        <thead>
+          <tr><th>Time</th><th>User</th><th>Action</th><th>Target</th></tr>
+        </thead>
+        <tbody id="auditLogsBody"><tr><td colspan="4">Loading logs...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- DELIVERY CHARGE SETTINGS -->
+  <section class="panel" id="deliverySection">
+    <h2>🚚 Delivery Charge Settings</h2>
+    <p class="hint">Today Delivery Charge for 1 KM (₹). Database me save hokar direct customer page par sync hoga.</p>
+    
+    <div style="margin-bottom: 14px;">
+      <span>Current Database Rate: </span>
+      <span class="rate-badge" id="currentRateDisplay">Loading...</span>
+    </div>
+
+    <form id="deliveryChargeForm">
+      <label for="deliveryChargeInput">Today Delivery Charge for 1 KM (₹)</label>
+      <input type="number" id="deliveryChargeInput" min="0" step="0.5" placeholder="Jaise 10" required>
+      <div class="btn-group">
+        <button type="submit" id="saveDeliveryChargeBtn">💾 Save Delivery Charge</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ORDER DASHBOARD -->
+  <section class="panel" id="ordersSection">
+    <h2>📦 Customer Orders Dashboard</h2>
+    <p class="hint">Customer ke aane wale orders dekhein aur status update karein.</p>
+
+    <div class="stats">
+      <div class="stat">Total Orders <strong id="totalOrders">0</strong></div>
+      <div class="stat">Pending Orders <strong id="pendingOrders">0</strong></div>
+      <div class="stat">Accepted Orders <strong id="acceptedOrders">0</strong></div>
+      <div class="stat">Delivered Orders <strong id="deliveredOrders">0</strong></div>
+    </div>
+
+    <label for="orderFilter">Status ke hisaab se filter karein</label>
+    <select id="orderFilter">
+      <option value="All">Sabhi Orders</option>
+      <option value="Pending">Pending</option>
+      <option value="Accepted">Accepted</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+
+    <button type="button" id="refreshOrdersBtn">🔄 Orders Refresh Karein</button>
+    <div id="orders"></div>
+  </section>
+
+  <!-- CATEGORY MANAGEMENT -->
+  <section class="panel" id="categoriesSection">
+    <h2>🗂️ Category Management</h2>
+    <p class="hint">Nayi category add karein ya purani delete karein.</p>
+    
+    <form id="categoryForm">
+      <label for="categoryName">Category ka naam</label>
+      <input id="categoryName" maxlength="40" placeholder="Jaise Beverages" required>
+      
+      <label for="categoryEmoji">Category emoji</label>
+      <input id="categoryEmoji" maxlength="8" value="🛍️" required>
+      
+      <div class="btn-group">
+        <button type="submit">➕ Category Add Karein</button>
+      </div>
+    </form>
+    
+    <div id="categoryList"></div>
+  </section>
+
+  <!-- ADD / EDIT PRODUCT -->
+  <section class="panel" id="productFormSection">
+    <h2 id="formHeading">➕ Naya Product Add Karein</h2>
+
+    <form id="productForm">
+      <label for="name">Product ka naam *</label>
+      <input id="name" maxlength="100" placeholder="Jaise Basmati Rice" required>
+
+      <label for="price">Price (₹) *</label>
+      <input id="price" type="number" min="0.01" step="0.01" placeholder="Jaise 80" required>
+
+      <label for="stock">Stock Quantity</label>
+      <input id="stock" type="number" min="0" value="100" required>
+
+      <label for="category">Category</label>
+      <select id="category"></select>
+
+      <label for="emoji">Emoji (photo na hone par)</label>
+      <input id="emoji" maxlength="12" value="🛍️">
+
+      <label for="photo">Product Photo</label>
+      <input id="photo" type="file" accept="image/*">
+      <img id="photoPreview" alt="Photo Preview">
+      <p id="photoHint" class="hint">Select photo to preview.</p>
+
+      <div class="btn-group">
+        <button type="submit" id="saveButton">Product Save Karein</button>
+        <button type="button" id="cancelEdit" class="secondary" hidden>Cancel Edit</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- PRODUCT LIST & INVENTORY -->
+  <section class="panel" id="productListSection">
+    <h2>🛍️ Inventory, Stock aur Price Management</h2>
+    <p class="hint">Price, stock aur availability real-time database mein update karein.</p>
+    
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+      <div style="flex:1; min-width:200px;">
+        <label for="productSearchInput">Product Search</label>
+        <input type="text" id="productSearchInput" placeholder="Naam se khojein...">
+      </div>
+      <div style="flex:1; min-width:200px;">
+        <label for="productCategoryFilter">Category Filter</label>
+        <select id="productCategoryFilter"><option value="All">Sabhi Categories</option></select>
+      </div>
+    </div>
+    
+    <div id="products"></div>
+  </section>
+
+</main>
+
+<script>
+let currentUser = null;
+let currentToken = localStorage.getItem("udanAdminToken") || "";
+let products = [];
+let categories = [];
+let orders = [];
+let editingId = null;
+let selectedPhoto = "";
+
+function escapeHTML(str){
+  if(str === null || str === undefined) return "";
+  return String(str).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  }[c]));
+}
+
+function money(value){
+  const n = Number(value);
+  return "₹" + (Number.isFinite(n) ? n.toLocaleString("en-IN", {minimumFractionDigits: 0, maximumFractionDigits: 2}) : "0");
+}
+
+/* ==================== AUTH FLOW ==================== */
+
+async function checkAuthSession(){
+  if(!currentToken){
+    showLoginView();
+    return;
+  }
+  try {
+    const res = await fetch("/api/auth/me", {
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if(data.success && data.user){
+      currentUser = data.user;
+      showDashboardView();
+    } else {
+      logout();
+    }
+  } catch(e){
+    showLoginView();
+  }
+}
+
+function showLoginView(){
+  document.getElementById("loginView").style.display = "block";
+  document.getElementById("dashboardView").style.display = "none";
+  document.getElementById("headerUserInfo").style.display = "none";
+}
+
+function showDashboardView(){
+  document.getElementById("loginView").style.display = "none";
+  document.getElementById("dashboardView").style.display = "block";
+  document.getElementById("headerUserInfo").style.display = "inline-block";
+  document.getElementById("userNameRole").textContent = `${currentUser.name} (${currentUser.role.toUpperCase()})`;
+
+  applyPermissions();
+  loadAllData();
+}
+
+function applyPermissions(){
+  const isOwner = currentUser.role === "owner";
+  const p = currentUser.permissions || {};
+
+  document.getElementById("ownerSection").style.display = isOwner ? "block" : "none";
+  document.getElementById("deliverySection").style.display = (isOwner || p.manageDeliveryCharge) ? "block" : "none";
+  document.getElementById("ordersSection").style.display = (isOwner || p.manageOrders) ? "block" : "none";
+  document.getElementById("categoriesSection").style.display = (isOwner || p.manageCategories) ? "block" : "none";
+
+  const canProduct = isOwner || p.manageProducts;
+  document.getElementById("productFormSection").style.display = canProduct ? "block" : "none";
+  document.getElementById("productListSection").style.display = canProduct ? "block" : "none";
+}
+
+function logout(){
+  localStorage.removeItem("udanAdminToken");
+  currentToken = "";
+  currentUser = null;
+  showLoginView();
+}
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errDiv = document.getElementById("loginError");
+  errDiv.style.display = "none";
+
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(data.success && data.token){
+      currentToken = data.token;
+      currentUser = data.user;
+      localStorage.setItem("udanAdminToken", currentToken);
+      showDashboardView();
+    } else {
+      errDiv.textContent = data.message || "Login fail ho gaya.";
+      errDiv.style.display = "block";
+    }
+  } catch(err){
+    errDiv.textContent = "Server connect nahi ho raha hai.";
+    errDiv.style.display = "block";
+  }
+});
+
+/* ==================== OWNER ADMIN CONTROLS ==================== */
+
+async function loadOwnerData(){
+  if(currentUser.role !== "owner") return;
+  loadOwnerAdmins();
+  loadAuditLogs();
+}
+
+async function loadOwnerAdmins(){
+  const listEl = document.getElementById("adminList");
+  try {
+    const res = await fetch("/api/owner/admins", {
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if(data.success && data.admins){
+      if(!data.admins.length){
+        listEl.innerHTML = "<p>Koi sub-admin nahi hai.</p>";
+        return;
+      }
+      listEl.innerHTML = data.admins.map(adm => `
+        <div class="admin-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <strong>${escapeHTML(adm.name)} (${escapeHTML(adm.email)})</strong>
+            <span>Status: <b style="color:${adm.isActive ? '#137a3d':'#c62828'}">${adm.isActive ? 'Active' : 'Disabled'}</b></span>
+          </div>
+          <p style="font-size:13px; color:#555; margin:6px 0;">
+            Permissions: Products (${adm.permissions.manageProducts ? '✔️':'❌'}),
+            Categories (${adm.permissions.manageCategories ? '✔️':'❌'}),
+            Orders (${adm.permissions.manageOrders ? '✔️':'❌'}),
+            Delivery Rate (${adm.permissions.manageDeliveryCharge ? '✔️':'❌'})
+          </p>
+          <div style="margin-top:8px;">
+            <button type="button" class="small-btn ${adm.isActive ? 'secondary' : ''}" onclick="toggleAdminStatus('${adm._id}', ${!adm.isActive})">
+              ${adm.isActive ? 'Revoke / Disable' : 'Restore / Enable'}
+            </button>
+            <button type="button" class="delete small-btn" onclick="deleteAdmin('${adm._id}')">Delete Admin</button>
+          </div>
+        </div>
+      `).join("");
+    }
+  } catch(e) {
+    listEl.innerHTML = "<p>Admins fetch error.</p>";
+  }
+}
+
+async function loadAuditLogs(){
+  const body = document.getElementById("auditLogsBody");
+  try {
+    const res = await fetch("/api/owner/audit-logs", {
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if(data.success && data.logs){
+      body.innerHTML = data.logs.map(l => `
+        <tr>
+          <td>${new Date(l.timestamp).toLocaleString("en-IN")}</td>
+          <td>${escapeHTML(l.performedBy)}</td>
+          <td><b>${escapeHTML(l.action)}</b></td>
+          <td>${escapeHTML(l.target || "-")}</td>
+        </tr>
+      `).join("");
+    }
+  } catch(e){}
+}
+
+document.getElementById("createAdminForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("adminName").value.trim();
+  const email = document.getElementById("adminEmail").value.trim();
+  const password = document.getElementById("adminTempPassword").value;
+  const permissions = {
+    manageProducts: document.getElementById("permProducts").checked,
+    manageCategories: document.getElementById("permCategories").checked,
+    manageOrders: document.getElementById("permOrders").checked,
+    manageDeliveryCharge: document.getElementById("permDeliveryCharge").checked
+  };
+
+  try {
+    const res = await fetch("/api/owner/admins", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ name, email, password, permissions })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("Naya admin account safalta-purvak ban gaya.");
+      document.getElementById("createAdminForm").reset();
+      loadOwnerData();
+    } else {
+      alert(data.message);
+    }
+  } catch(err){
+    alert("Admin create error.");
+  }
+});
+
+async function toggleAdminStatus(id, newStatus){
+  try {
+    const res = await fetch(`/api/owner/admins/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ isActive: newStatus })
+    });
+    const data = await res.json();
+    if(data.success) loadOwnerData();
+    else alert(data.message);
+  } catch(e){ alert("Status change error"); }
+}
+
+async function deleteAdmin(id){
+  if(!confirm("Kya aap is admin ko sach mein delete karna chahte hain?")) return;
+  try {
+    const res = await fetch(`/api/owner/admins/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("Admin delete ho gaya.");
+      loadOwnerData();
+    } else alert(data.message);
+  } catch(e){ alert("Delete error"); }
+}
+
+/* ==================== DELIVERY CHARGE ==================== */
+
+async function fetchDeliveryCharge(){
+  try {
+    const res = await fetch("/api/delivery-charge");
+    const data = await res.json();
+    const rate = Number(data.rate) || 10;
+    document.getElementById("currentRateDisplay").textContent = `₹${rate} / km`;
+    document.getElementById("deliveryChargeInput").value = rate;
+  } catch(e){
+    document.getElementById("currentRateDisplay").textContent = "₹10 / km (Default)";
+  }
+}
+
+document.getElementById("deliveryChargeForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const rate = Number(document.getElementById("deliveryChargeInput").value);
+  try {
+    const res = await fetch("/api/admin/delivery-charge", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ rate })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert(`Database mein rate ₹${rate}/km save ho gayi.`);
+      fetchDeliveryCharge();
+    } else {
+      alert(data.message);
+    }
+  } catch(e){
+    alert("Delivery charge save nahi ho paya.");
+  }
+});
+
+/* ==================== PRODUCTS & INVENTORY ==================== */
+
+async function loadAllData(){
+  fetchDeliveryCharge();
+  if(currentUser.role === "owner") loadOwnerData();
+  await loadCategories();
+  await loadProducts();
+  await loadOrders();
+}
+
+async function loadCategories(){
+  try {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    categories = data.categories || [];
+  } catch(e){ categories = []; }
+  renderCategories();
+  syncCategorySelects();
+}
+
+function renderCategories(){
+  const box = document.getElementById("categoryList");
+  if(!categories.length){
+    box.innerHTML = "<p>Koi category nahi mili.</p>";
+    return;
+  }
+  box.innerHTML = categories.map(c => `
+    <div class="category-card">
+      <span class="cat-emoji">${escapeHTML(c.emoji)}</span>
+      <span class="cat-name">${escapeHTML(c.name)}</span>
+      <button type="button" class="delete small-btn" onclick="deleteCategory('${c._id}')">Delete</button>
+    </div>
+  `).join("");
+}
+
+function syncCategorySelects(){
+  const select = document.getElementById("category");
+  select.innerHTML = categories.map(c => `<option value="${escapeHTML(c.name)}">${escapeHTML(c.emoji)} ${escapeHTML(c.name)}</option>`).join("");
+
+  const filter = document.getElementById("productCategoryFilter");
+  filter.innerHTML = '<option value="All">Sabhi Categories</option>' + categories.map(c => `<option value="${escapeHTML(c.name)}">${escapeHTML(c.emoji)} ${escapeHTML(c.name)}</option>`).join("");
+}
+
+document.getElementById("categoryForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("categoryName").value.trim();
+  const emoji = document.getElementById("categoryEmoji").value.trim() || "🛍️";
+  try {
+    const res = await fetch("/api/admin/categories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ name, emoji })
+    });
+    const data = await res.json();
+    if(data.success){
+      document.getElementById("categoryForm").reset();
+      loadCategories();
+    } else alert(data.message);
+  } catch(e){ alert("Category error"); }
+});
+
+async function deleteCategory(id){
+  if(!confirm("Category delete karne par iske products doosri category mein move honge. Confirm?")) return;
+  try {
+    const res = await fetch(`/api/admin/categories/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if(data.success){
+      loadCategories();
+      loadProducts();
+    } else alert(data.message);
+  } catch(e){ alert("Delete error"); }
+}
+
+async function loadProducts(){
+  try {
+    const res = await fetch("/api/products");
+    const data = await res.json();
+    products = data.products || [];
+  } catch(e){ products = []; }
+  renderProducts();
+}
+
+function renderProducts(){
+  const box = document.getElementById("products");
+  const chosenCategory = document.getElementById("productCategoryFilter").value || "All";
+  const searchTerm = (document.getElementById("productSearchInput").value || "").trim().toLowerCase();
+
+  const visible = products.filter(p => {
+    const matchCat = chosenCategory === "All" || p.category === chosenCategory;
+    const matchSearch = !searchTerm || (p.name && p.name.toLowerCase().includes(searchTerm));
+    return matchCat && matchSearch;
+  });
+
+  if(!visible.length){
+    box.innerHTML = "<p>Koi product nahi mila.</p>";
+    return;
+  }
+
+  box.innerHTML = visible.map(p => `
+    <div class="product">
+      ${p.photo ? `<img class="product-photo" src="${p.photo}" alt="${escapeHTML(p.name)}">` : `<div class="product-photo" style="display:grid;place-items:center;font-size:38px">${escapeHTML(p.emoji || "🛍️")}</div>`}
+      <div class="product-info">
+        <h3>${escapeHTML(p.name)}</h3>
+        <p>Category: <b>${escapeHTML(p.category)}</b> | Status: <b style="color:${p.isAvailable ? '#137a3d':'#c62828'}">${p.isAvailable ? 'In Stock' : 'Out of Stock'}</b></p>
+        <p>Price: <span class="price">${money(p.price)}</span></p>
+
+        <label>Naya Price (₹)</label>
+        <input type="number" id="price-${p._id}" step="0.01" value="${p.price}">
+
+        <label>Stock Quantity</label>
+        <input type="number" id="stock-${p._id}" value="${p.stock !== undefined ? p.stock : 100}">
+
+        <div class="actions">
+          <button type="button" onclick="quickUpdate('${p._id}')">Price & Stock Save</button>
+          <button type="button" class="secondary" onclick="toggleAvailability('${p._id}', ${!p.isAvailable})">${p.isAvailable ? 'Mark Out of Stock' : 'Mark In Stock'}</button>
+          <button type="button" class="secondary" onclick="startEditProduct('${p._id}')">Edit Full</button>
+          <button type="button" class="delete" onclick="deleteProduct('${p._id}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+document.getElementById("productSearchInput").addEventListener("input", renderProducts);
+document.getElementById("productCategoryFilter").addEventListener("change", renderProducts);
+
+async function quickUpdate(id){
+  const price = Number(document.getElementById("price-" + id).value);
+  const stock = Number(document.getElementById("stock-" + id).value);
+  try {
+    const res = await fetch(`/api/admin/products/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ price, stock })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("Database mein Price aur Stock update ho gaya.");
+      loadProducts();
+    } else alert(data.message);
+  } catch(e){ alert("Update error"); }
+}
+
+async function toggleAvailability(id, isAvailable){
+  try {
+    const res = await fetch(`/api/admin/products/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ isAvailable })
+    });
+    const data = await res.json();
+    if(data.success) loadProducts();
+    else alert(data.message);
+  } catch(e){ alert("Stock status toggle error"); }
+}
+
+async function deleteProduct(id){
+  if(!confirm("Kya aap is product ko database se delete karna chahte hain?")) return;
+  try {
+    const res = await fetch(`/api/admin/products/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("Product delete ho gaya.");
+      loadProducts();
+    } else alert(data.message);
+  } catch(e){ alert("Delete error"); }
+}
+
+function startEditProduct(id){
+  const p = products.find(x => x._id === id);
+  if(!p) return;
+  editingId = p._id;
+  document.getElementById("name").value = p.name;
+  document.getElementById("price").value = p.price;
+  document.getElementById("stock").value = p.stock !== undefined ? p.stock : 100;
+  document.getElementById("category").value = p.category;
+  document.getElementById("emoji").value = p.emoji || "🛍️";
+  selectedPhoto = p.photo || "";
+
+  const preview = document.getElementById("photoPreview");
+  if(selectedPhoto){
+    preview.src = selectedPhoto;
+    preview.style.display = "block";
+  } else preview.style.display = "none";
+
+  document.getElementById("formHeading").textContent = "✏️ Product Edit Karein";
+  document.getElementById("saveButton").textContent = "Changes Save Karein";
+  document.getElementById("cancelEdit").hidden = false;
+  document.getElementById("productForm").scrollIntoView({ behavior: "smooth" });
+}
+
+document.getElementById("cancelEdit").addEventListener("click", () => {
+  editingId = null;
+  selectedPhoto = "";
+  document.getElementById("productForm").reset();
+  document.getElementById("photoPreview").style.display = "none";
+  document.getElementById("formHeading").textContent = "➕ Naya Product Add Karein";
+  document.getElementById("saveButton").textContent = "Product Save Karein";
+  document.getElementById("cancelEdit").hidden = true;
+});
+
+document.getElementById("photo").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    selectedPhoto = reader.result;
+    const preview = document.getElementById("photoPreview");
+    preview.src = selectedPhoto;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("productForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("name").value.trim();
+  const price = Number(document.getElementById("price").value);
+  const stock = Number(document.getElementById("stock").value);
+  const category = document.getElementById("category").value;
+  const emoji = document.getElementById("emoji").value.trim() || "🛍️";
+
+  const payload = { name, price, stock, category, emoji, photo: selectedPhoto };
+
+  try {
+    const url = editingId ? `/api/admin/products/${editingId}` : "/api/admin/products";
+    const method = editingId ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("Product successfully save ho gaya.");
+      document.getElementById("cancelEdit").click();
+      loadProducts();
+    } else alert(data.message);
+  } catch(e){ alert("Save product error."); }
+});
+
+/* ==================== ORDERS DASHBOARD ==================== */
+
+async function loadOrders(){
+  if(!currentUser || (!currentUser.permissions?.manageOrders && currentUser.role !== "owner")) return;
+  try {
+    const res = await fetch("/api/admin/orders", {
+      headers: { "Authorization": `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    orders = data.orders || [];
+  } catch(e){ orders = []; }
+  renderOrders();
+}
+
+function renderOrders(){
+  const filter = document.getElementById("orderFilter").value;
+  document.getElementById("totalOrders").textContent = orders.length;
+  document.getElementById("pendingOrders").textContent = orders.filter(o => o.status === "Pending").length;
+  document.getElementById("acceptedOrders").textContent = orders.filter(o => o.status === "Accepted").length;
+  document.getElementById("deliveredOrders").textContent = orders.filter(o => o.status === "Delivered").length;
+
+  const shown = orders.filter(o => filter === "All" || o.status === filter);
+  const box = document.getElementById("orders");
+  if(!shown.length){
+    box.innerHTML = "<p>Koi order nahi mila.</p>";
+    return;
+  }
+
+  box.innerHTML = shown.map(o => `
+    <div class="order">
+      <h3>Order ID: ${escapeHTML(o.orderId)}</h3>
+      <p class="order-status">Status: ${escapeHTML(o.status)}</p>
+      <p><b>Customer:</b> ${escapeHTML(o.customerName)} | <b>Mobile:</b> ${escapeHTML(o.phone)}</p>
+      <p><b>Delivery Address:</b> ${escapeHTML(o.address)}</p>
+      <p><b>Items:</b></p>
+      <ul>
+        ${(o.items || []).map(i => `<li>${escapeHTML(i.name)} × ${i.qty} =${money(i.price * i.qty)}</li>`).join("")}
+      </ul>
+      <h3>Subtotal: ${money(o.subtotal || o.total)}</h3>
+      <p style="font-size:13px; color:#555;">Delivery Rate Reference: ₹${o.deliveryRateAtOrder || 10}/km</p>
+      
+      <label>Order Status Badlein</label>
+      <select id="status-${o._id}">
+        <option value="Pending" ${o.status === "Pending" ? "selected":""}>Pending</option>
+        <option value="Accepted" ${o.status === "Accepted" ? "selected":""}>Accepted</option>
+        <option value="Delivered" ${o.status === "Delivered" ? "selected":""}>Delivered</option>
+        <option value="Cancelled" ${o.status === "Cancelled" ? "selected":""}>Cancelled</option>
+      </select>
+      <div style="margin-top:8px;">
+        <button type="button" class="small-btn" onclick="saveOrderStatus('${o._id}')">Status Save Karein</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function saveOrderStatus(id){
+  const status = document.getElementById("status-" + id).value;
+  try {
+    const res = await fetch(`/api/admin/orders/${id}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert("Order status update ho gaya.");
+      loadOrders();
+    } else alert(data.message);
+  } catch(e){ alert("Update status error"); }
+}
+
+document.getElementById("orderFilter").addEventListener("change", renderOrders);
+document.getElementById("refreshOrdersBtn").addEventListener("click", loadOrders);
+
+/* ==================== SAFE DATA MIGRATION ==================== */
+
+async function runDataMigration(){
+  const localProdRaw = localStorage.getItem("udanProducts");
+  const localCatRaw = localStorage.getItem("udanCategories");
+
+  let localProds = [];
+  let localCats = [];
+
+  try { if(localProdRaw) localProds = JSON.parse(localProdRaw); } catch(e){}
+  try { if(localCatRaw) localCats = JSON.parse(localCatRaw); } catch(e){}
+
+  if(!localProds.length && !localCats.length){
+    alert("Is browser ke localStorage mein koi purana data nahi mila.");
+    return;
+  }
+
+  if(!confirm(`Kya aap ${localProds.length} products aur ${localCats.length} categories database mein transfer karna chahte hain?`)) return;
+
+  try {
+    const res = await fetch("/api/admin/migrate-local-data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ products: localProds, categories: localCats })
+    });
+    const data = await res.json();
+    alert(data.message);
+    loadAllData();
+  } catch(e){ alert("Migration request fail hui."); }
+}
+
+checkAuthSession();
+</script>
+
+</body>
+</html>
