@@ -1,902 +1,440 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nalanda Udan Mart - Secure Admin Panel</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f1; color: #222; }
-    header { background: #137a3d; color: white; text-align: center; padding: 20px; }
-    header a { color: white; display: inline-block; margin-top: 8px; text-decoration: underline; font-weight: bold; }
-    .header-user { margin-top: 10px; font-size: 14px; background: rgba(0,0,0,0.2); display: inline-block; padding: 6px 14px; border-radius: 20px; }
-    .logout-btn { background: #c62828; color: white; border: 0; padding: 5px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; font-size: 13px; font-weight: bold; }
-    main { max-width: 1000px; margin: 25px auto; padding: 16px; }
-    .panel { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    #productForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
-    #productForm label, #productForm input, #productForm select, #productForm p, #productForm button, #photoPreview { min-width: 0; }
-    #productForm #photo, #productForm #photoHint, #productForm .hint, #productForm #photoPreview, #productForm .btn-group { grid-column: 1 / -1; }
-    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    @media(max-width: 600px){ #productForm { grid-template-columns: 1fr; } }
-    label { display: block; font-weight: bold; margin-top: 10px; }
-    input, select, textarea { width: 100%; padding: 12px; margin: 7px 0 12px; border: 1px solid #ccc; border-radius: 7px; font-size: 16px; font-family: inherit; }
-    button { background: #137a3d; color: white; border: 0; padding: 11px 14px; border-radius: 7px; cursor: pointer; margin: 3px; font-weight: bold; font-size: 14px; transition: opacity 0.2s; }
-    button:hover { opacity: 0.9; }
-    .delete { background: #c62828; }
-    .secondary { background: #555; }
-    .hint { color: #555; font-size: 13px; line-height: 1.5; margin: 4px 0 8px; }
-    .product { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin-top: 12px; display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 14px; background: #fff; }
-    .product-photo { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; background: #eee; }
-    .product-info { min-width: 0; }
-    .product-info h3 { margin: 0 0 6px 0; }
-    .price { color: #137a3d; font-weight: bold; font-size: 18px; }
-    .category-card { border: 1px solid #ddd; border-radius: 9px; padding: 12px; margin: 8px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fafafa; }
-    .category-card .cat-emoji { font-size: 26px; }
-    .category-card .cat-name { font-weight: bold; flex: 1; min-width: 120px; font-size: 16px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    #photoPreview { display: none; width: 140px; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; }
-    .order { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-top: 14px; overflow-wrap: anywhere; background: #fff; }
-    .order-status { font-weight: bold; color: #137a3d; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
-    .stat { background: #e0f4df; padding: 15px; border-radius: 10px; text-align: center; }
-    .stat strong { display: block; font-size: 24px; color: #137a3d; margin-top: 6px; }
-    .small-btn { padding: 8px 12px; font-size: 13px; }
-    .rate-badge { display: inline-block; background: #e0f4df; color: #137a3d; padding: 6px 12px; border-radius: 6px; font-size: 15px; font-weight: bold; margin-top: 4px; }
-    #loginView { max-width: 420px; margin: 60px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
-    .login-error { color: #c62828; font-weight: bold; font-size: 14px; margin-top: 10px; display: none; }
-    .admin-card { border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin-top: 12px; background: #fbfbfb; }
-    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
-    .checkbox-group label { display: flex; align-items: center; gap: 8px; font-weight: normal; margin: 0; cursor: pointer; }
-    .checkbox-group input { width: auto; margin: 0; }
-    .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-    .audit-table th, .audit-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    .audit-table th { background: #f0f0f0; }
-    @media(max-width: 520px){
-      main { padding: 10px; }
-      .panel { padding: 15px; }
-      .product { grid-template-columns: 78px minmax(0,1fr); gap: 10px; }
-      .product-photo { width: 78px; height: 78px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NALANDA UDAN MART | Online Shopping</title>
+<meta name="description" content="Nalanda Udan Mart - Parbalpur, Nalanda, Bihar mein grocery aur daily essentials ki online shopping.">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7f2;color:#222}
+header{background:#137a3d;color:white;padding:20px 5%}
+.brand-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.brand{font-size:28px;font-weight:bold}
+.admin-link{color:#ffca28;text-decoration:none;font-weight:bold;font-size:14px;border:1px solid #ffca28;padding:6px 12px;border-radius:6px;transition:0.2s}
+.admin-link:hover{background:#ffca28;color:#222}
+.search{display:flex;gap:8px;margin-top:18px}
+input,textarea,select{min-width:0;padding:13px;border:1px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit}
+button{border:0;border-radius:8px;padding:12px 16px;cursor:pointer;font-weight:bold}
+.search input{flex:1}
+.search button{background:#ffca28;color:#222}
+
+/* Live Delivery charge notification bar */
+.delivery-rate-bar{background:#2e7d32;color:#fff;padding:11px 5%;display:flex;align-items:center;justify-content:space-between;font-weight:bold;font-size:15px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+.delivery-rate-bar span.rate-tag{background:#ffca28;color:#111;padding:3px 10px;border-radius:20px;font-size:14px}
+.rate-error{background:#c62828;}
+
+.hero{background:#e0f4df;margin:20px auto;padding:28px 20px;width:92%;border-radius:15px}
+.hero h1{color:#137a3d;margin-top:0}
+main{padding:0 4% 30px}
+.categories,.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:14px}
+.category,.product,#cart,#checkoutForm{background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.category{text-align:center;font-weight:bold;cursor:pointer;border:2px solid transparent}
+.category:hover,.category.active{background:#e0f4df;border-color:#137a3d}
+.emoji{font-size:36px}
+.product h3{margin:10px 0}
+.product-photo{width:100%;height:145px;object-fit:contain;border-radius:8px}
+.product-category{color:#666;font-size:13px}
+.price{color:#137a3d;font-weight:bold;font-size:19px;margin:8px 0}
+.product button{width:100%;background:#137a3d;color:white;margin-top:8px}
+.product button:disabled{background:#999;cursor:not-allowed}
+#cart{margin:22px 0}
+.cart-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #eee;padding:12px 0;flex-wrap:wrap}
+.cart-actions{display:flex;align-items:center;gap:6px}
+.cart-actions button{background:#eee;padding:7px 11px}
+.order-btn{background:#ffca28;color:#222;margin-top:8px}
+#checkoutForm{margin:22px 0;display:none}
+#orderForm label{display:block;font-weight:bold;margin-top:14px}
+#orderForm input,#orderForm textarea{width:100%;margin-top:7px}
+
+.delivery-notice-box{background:#fff8e1;border-left:4px solid #ffb300;padding:12px 14px;margin:14px 0;border-radius:6px;font-size:14px;line-height:1.5;color:#664d03}
+
+.confirm-btn{background:#137a3d;color:white;margin-top:16px}
+.cancel-btn{background:#eee;color:#222;margin-top:16px}
+footer{background:#174c2d;color:white;padding:22px;text-align:center}
+@media(max-width:480px){
+  .brand{font-size:23px}
+  .hero h1{font-size:25px}
+  .delivery-rate-bar{font-size:13px;flex-direction:column;gap:6px;align-items:flex-start}
+}
+</style>
 </head>
-
 <body>
-
 <header>
-  <h1>🛒 NALANDA UDAN MART</h1>
-  <h2>Admin Panel</h2>
-  <a href="index.html">Customer Website par Jayein</a>
-  <div id="headerUserInfo" class="header-user" style="display: none;">
-    <span id="userNameRole">Logged in</span>
-    <button type="button" class="logout-btn" onclick="logout()">Logout</button>
+  <div class="brand-row">
+    <div class="brand">🛒 NALANDA UDAN MART</div>
+    <a href="admin.html" class="admin-link">⚙️ Admin Panel</a>
+  </div>
+  <p>Har Zaroorat, Aapke Darwaze Par!</p>
+  <p>📍 Parbalpur, Nalanda, Bihar</p>
+  <div class="search">
+    <input id="search" type="search" placeholder="Product khojein...">
+    <button type="button" onclick="showProducts()">Search</button>
   </div>
 </header>
 
-<div id="loginView">
-  <h2 style="margin-top:0; color:#137a3d;">🔒 Secure Admin Login</h2>
-  <p class="hint">Nalanda Udan Mart Dashboard access karne ke liye login karein.</p>
-  
-  <form id="loginForm">
-    <label for="loginEmail">Email / Username</label>
-    <input type="email" id="loginEmail" placeholder="admin@udanmart.com" required>
-
-    <label for="loginPassword">Password</label>
-    <input type="password" id="loginPassword" placeholder="••••••••" required>
-
-    <button type="submit" style="width: 100%; margin-top: 10px;">Login Karein</button>
-    <div id="loginError" class="login-error"></div>
-  </form>
+<!-- DELIVERY CHARGE BAR -->
+<div class="delivery-rate-bar" id="deliveryRateBar">
+  <span id="deliveryRateText">🚚 Delivery Charge: <span id="deliveryRateDisplay">Loading...</span> per KM</span>
+  <span class="rate-tag">Distance hisaab se</span>
 </div>
 
-<main id="dashboardView" style="display: none;">
+<section class="hero">
+  <h1>Ghar Baithe Shopping Karo!</h1>
+  <p>Grocery, fruits, vegetables aur daily essentials ek hi jagah.</p>
+  <b>Apne local dukandaar se kharidein.</b>
+</section>
 
-  <section class="panel" id="ownerSection" style="display: none; border: 2px solid #137a3d;">
-    <h2>👑 Owner Control: Admin Management</h2>
-    <p class="hint">Admins banayein, permissions assign karein aur audit trail dekhein.</p>
+<main>
+  <h2>🛍️ Categories</h2>
+  <div class="categories" id="categories"></div>
+  
+  <h2>⭐ Products</h2>
+  <p>Admin panel se update kiye gaye live products aur prices.</p>
+  <div class="products" id="products"></div>
 
-    <form id="createAdminForm">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-        <div>
-          <label for="adminName">Admin ka Naam</label>
-          <input id="adminName" placeholder="Jaise Rahul Kumar" required>
-        </div>
-        <div>
-          <label for="adminEmail">Email ID</label>
-          <input id="adminEmail" type="email" placeholder="rahul@udanmart.com" required>
-        </div>
-        <div>
-          <label for="adminTempPassword">Temporary Password</label>
-          <input id="adminTempPassword" type="password" placeholder="Min 6 characters" required>
-        </div>
-      </div>
-
-      <label>Permissions:</label>
-      <div class="checkbox-group">
-        <label><input type="checkbox" id="permProducts" checked> Products Management</label>
-        <label><input type="checkbox" id="permCategories" checked> Categories Management</label>
-        <label><input type="checkbox" id="permOrders" checked> Orders Management</label>
-        <label><input type="checkbox" id="permDeliveryCharge"> Delivery Charge Change</label>
-      </div>
-
-      <button type="submit">➕ Naya Admin Banayein</button>
-    </form>
-
-    <h3 style="margin-top: 25px;">Maujooda Admins List</h3>
-    <div id="adminList">Loading admins...</div>
-
-    <h3 style="margin-top: 25px;">🛡️ Security Audit Logs</h3>
-    <div style="overflow-x: auto;">
-      <table class="audit-table">
-        <thead>
-          <tr><th>Time</th><th>User</th><th>Action</th><th>Target</th></tr>
-        </thead>
-        <tbody id="auditLogsBody"><tr><td colspan="4">Loading logs...</td></tr></tbody>
-      </table>
+  <section id="cart">
+    <h2>🛒 Aapka Cart</h2>
+    <div id="cartItems">Abhi cart khaali hai.</div>
+    <h3 id="total">Subtotal: ₹0</h3>
+    <div style="font-size:13px;color:#555;margin-bottom:10px;">
+      ℹ️ Delivery charges (<span id="cartRateNote">₹10/km</span>) order ke address aur distance ke hisaab se alag se bataye jayenge.
     </div>
+    <button type="button" class="order-btn" onclick="checkout()">Order Karein</button>
   </section>
 
-  <!-- DELIVERY CHARGE SETTINGS -->
-  <section class="panel" id="deliverySection">
-    <h2>🚚 Delivery Charge Settings</h2>
-    <p class="hint">Today Delivery Charge for 1 KM (₹). Database me save hokar direct customer page par sync hoga.</p>
+  <section id="checkoutForm">
+    <h2>📦 Customer Details</h2>
+    <p>Apna sahi naam, mobile number aur delivery address bhariye.</p>
     
-    <div style="margin-bottom: 14px;">
-      <span>Current Database Rate: </span>
-      <span class="rate-badge" id="currentRateDisplay">Loading...</span>
+    <div class="delivery-notice-box">
+      🚚 <b>Delivery Charge: <span id="checkoutRateNote">₹10</span> per KM</b><br>
+      Delivery charges order ke address aur distance ke hisaab se alag se bataye jayenge. Subtotal mein delivery charge shamil nahi hai; dukandaar distance hisaab se final bill ke sath aapko batayenge.
     </div>
 
-    <form id="deliveryChargeForm">
-      <label for="deliveryChargeInput">Today Delivery Charge for 1 KM (₹)</label>
-      <input type="number" id="deliveryChargeInput" min="0" step="0.5" placeholder="Jaise 10" required>
-      <div class="btn-group">
-        <button type="submit" id="saveDeliveryChargeBtn">💾 Save Delivery Charge</button>
-      </div>
-    </form>
-  </section>
-
-  <!-- ORDER DASHBOARD -->
-  <section class="panel" id="ordersSection">
-    <h2>📦 Customer Orders Lifecycle Dashboard</h2>
-    <p class="hint">Orders accept/reject karein, preparing ya out for delivery status set karein.</p>
-
-    <div class="stats">
-      <div class="stat">Total Orders <strong id="totalOrders">0</strong></div>
-      <div class="stat">New/Pending <strong id="pendingOrders">0</strong></div>
-      <div class="stat">Accepted <strong id="acceptedOrders">0</strong></div>
-      <div class="stat">Preparing <strong id="preparingOrders">0</strong></div>
-      <div class="stat">Out for Delivery <strong id="outOrders">0</strong></div>
-      <div class="stat">Delivered <strong id="deliveredOrders">0</strong></div>
-      <div class="stat">Cancelled/Rejected <strong id="cancelledOrders">0</strong></div>
-    </div>
-
-    <label for="orderFilter">Status ke hisaab se filter karein</label>
-    <select id="orderFilter">
-      <option value="All">Sabhi Orders</option>
-      <option value="Order Placed">Order Placed</option>
-      <option value="Pending">Pending</option>
-      <option value="Accepted">Accepted</option>
-      <option value="Preparing">Preparing</option>
-      <option value="Out for Delivery">Out for Delivery</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Cancelled">Cancelled</option>
-      <option value="Rejected">Rejected</option>
-    </select>
-
-    <button type="button" id="refreshOrdersBtn">🔄 Orders Refresh Karein</button>
-    <div id="orders"></div>
-  </section>
-
-  <!-- CATEGORY MANAGEMENT -->
-  <section class="panel" id="categoriesSection">
-    <h2>🗂️ Category Management</h2>
-    <form id="categoryForm">
-      <label for="categoryName">Category ka naam</label>
-      <input id="categoryName" maxlength="40" placeholder="Jaise Beverages" required>
+    <form id="orderForm">
+      <label for="customerName">Poora naam</label>
+      <input id="customerName" type="text" placeholder="Apna naam likhein" autocomplete="name" required>
       
-      <label for="categoryEmoji">Category emoji</label>
-      <input id="categoryEmoji" maxlength="8" value="🛍️" required>
+      <label for="customerPhone">Mobile number</label>
+      <input id="customerPhone" type="tel" inputmode="numeric" pattern="[6-9][0-9]{9}" maxlength="10" placeholder="10 digit mobile number" autocomplete="tel" required>
       
-      <div class="btn-group">
-        <button type="submit">➕ Category Add Karein</button>
-      </div>
-    </form>
-    <div id="categoryList"></div>
-  </section>
+      <label for="customerAddress">Delivery address</label>
+      <textarea id="customerAddress" rows="4" placeholder="Gaon, mohalla, ghar ka pata" autocomplete="street-address" required></textarea>
+      
+      <label>Payment method</label>
+      <p>💵 Cash on Delivery (delivery ke samay payment)</p>
+      
+      <h3 id="checkoutTotal">Items Subtotal: ₹0</h3>
+      <p style="font-size:13px;color:#666;margin-top:-6px;">* Delivery charge distance hisaab se bill me judega.</p>
 
-  <!-- ADD / EDIT PRODUCT -->
-  <section class="panel" id="productFormSection">
-    <h2 id="formHeading">➕ Naya Product Add Karein</h2>
-
-    <form id="productForm">
-      <label for="name">Product ka naam *</label>
-      <input id="name" maxlength="100" placeholder="Jaise Basmati Rice" required>
-
-      <label for="price">Price (₹) *</label>
-      <input id="price" type="number" min="0.01" step="0.01" placeholder="Jaise 80" required>
-
-      <label for="stock">Stock Quantity</label>
-      <input id="stock" type="number" min="0" value="100" required>
-
-      <label for="category">Category</label>
-      <select id="category"></select>
-
-      <label for="emoji">Emoji (photo na hone par)</label>
-      <input id="emoji" maxlength="12" value="🛍️">
-
-      <label for="photo">Product Photo</label>
-      <input id="photo" type="file" accept="image/*">
-      <img id="photoPreview" alt="Photo Preview">
-      <p id="photoHint" class="hint">Select photo to preview.</p>
-
-      <div class="btn-group">
-        <button type="submit" id="saveButton">Product Save Karein</button>
-        <button type="button" id="cancelEdit" class="secondary" hidden>Cancel Edit</button>
-      </div>
+      <button class="confirm-btn" type="submit" id="confirmOrderBtn">Order Confirm Karein</button>
+      <button class="cancel-btn" type="button" onclick="closeCheckout()">Cancel</button>
     </form>
   </section>
-
-  <!-- PRODUCT LIST & INVENTORY -->
-  <section class="panel" id="productListSection">
-    <h2>🛍️ Inventory, Stock aur Price Management</h2>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-      <div style="flex:1; min-width:200px;">
-        <label for="productSearchInput">Product Search</label>
-        <input type="text" id="productSearchInput" placeholder="Naam se khojein...">
-      </div>
-      <div style="flex:1; min-width:200px;">
-        <label for="productCategoryFilter">Category Filter</label>
-        <select id="productCategoryFilter"><option value="All">Sabhi Categories</option></select>
-      </div>
-    </div>
-    <div id="products"></div>
-  </section>
-
 </main>
 
+<footer>
+  <h3>NALANDA UDAN MART</h3>
+  <p>Parbalpur, Nalanda, Bihar</p>
+  <p>Local shopping, aapke apne bazaar se.</p>
+</footer>
+
 <script>
-let currentUser = null;
-let currentToken = localStorage.getItem("udanAdminToken") || "";
+let selectedCategory = "";
+let cart = [];
 let products = [];
 let categories = [];
-let orders = [];
-let editingId = null;
-let selectedPhoto = "";
+let currentRate = 10;
 
-function escapeHTML(str){
-  if(str === null || str === undefined) return "";
-  return String(str).replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+function escapeHTML(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
 
-function money(value){
-  const n = Number(value);
-  return "₹" + (Number.isFinite(n) ? n.toLocaleString("en-IN", {minimumFractionDigits: 0, maximumFractionDigits: 2}) : "0");
+function money(v) {
+  const n = Number(v || 0);
+  if (!Number.isFinite(n)) return "₹0";
+  return "₹" + n.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
 
-/* ==================== AUTH FLOW ==================== */
+/* ==================== DIRECT DATABASE API SYNC ==================== */
 
-async function checkAuthSession(){
-  if(!currentToken){
-    showLoginView();
-    return;
-  }
-  try {
-    const res = await fetch("/api/auth/me", {
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    if(data.success && data.user){
-      currentUser = data.user;
-      showDashboardView();
-    } else {
-      logout();
-    }
-  } catch(e){
-    showLoginView();
-  }
-}
-
-function showLoginView(){
-  document.getElementById("loginView").style.display = "block";
-  document.getElementById("dashboardView").style.display = "none";
-  document.getElementById("headerUserInfo").style.display = "none";
-}
-
-function showDashboardView(){
-  document.getElementById("loginView").style.display = "none";
-  document.getElementById("dashboardView").style.display = "block";
-  document.getElementById("headerUserInfo").style.display = "inline-block";
-  document.getElementById("userNameRole").textContent = `${currentUser.name} (${currentUser.role.toUpperCase()})`;
-
-  applyPermissions();
-  loadAllData();
-}
-
-function applyPermissions(){
-  const isOwner = currentUser.role === "owner";
-  const p = currentUser.permissions || {};
-
-  document.getElementById("ownerSection").style.display = isOwner ? "block" : "none";
-  document.getElementById("deliverySection").style.display = (isOwner || p.manageDeliveryCharge) ? "block" : "none";
-  document.getElementById("ordersSection").style.display = (isOwner || p.manageOrders) ? "block" : "none";
-  document.getElementById("categoriesSection").style.display = (isOwner || p.manageCategories) ? "block" : "none";
-
-  const canProduct = isOwner || p.manageProducts;
-  document.getElementById("productFormSection").style.display = canProduct ? "block" : "none";
-  document.getElementById("productListSection").style.display = canProduct ? "block" : "none";
-}
-
-function logout(){
-  localStorage.removeItem("udanAdminToken");
-  currentToken = "";
-  currentUser = null;
-  showLoginView();
-}
-
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errDiv = document.getElementById("loginError");
-  errDiv.style.display = "none";
-
-  try {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if(data.success && data.token){
-      currentToken = data.token;
-      currentUser = data.user;
-      localStorage.setItem("udanAdminToken", currentToken);
-      showDashboardView();
-    } else {
-      errDiv.textContent = data.message || "Login fail ho gaya.";
-      errDiv.style.display = "block";
-    }
-  } catch(err){
-    errDiv.textContent = "Server connect nahi ho raha hai.";
-    errDiv.style.display = "block";
-  }
-});
-
-/* ==================== OWNER CONTROLS ==================== */
-
-async function loadOwnerData(){
-  if(currentUser.role !== "owner") return;
-  loadOwnerAdmins();
-  loadAuditLogs();
-}
-
-async function loadOwnerAdmins(){
-  const listEl = document.getElementById("adminList");
-  try {
-    const res = await fetch("/api/owner/admins", {
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    if(data.success && data.admins){
-      if(!data.admins.length){
-        listEl.innerHTML = "<p>Koi sub-admin nahi hai.</p>";
-        return;
-      }
-      listEl.innerHTML = data.admins.map(adm => `
-        <div class="admin-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-            <strong>${escapeHTML(adm.name)} (${escapeHTML(adm.email)})</strong>
-            <span>Status: <b style="color:${adm.isActive ? '#137a3d':'#c62828'}">${adm.isActive ? 'Active' : 'Disabled'}</b></span>
-          </div>
-          <div style="margin-top:8px;">
-            <button type="button" class="small-btn ${adm.isActive ? 'secondary' : ''}" onclick="toggleAdminStatus('${adm._id}', ${!adm.isActive})">
-              ${adm.isActive ? 'Revoke / Disable' : 'Restore / Enable'}
-            </button>
-            <button type="button" class="delete small-btn" onclick="deleteAdmin('${adm._id}')">Delete Admin</button>
-          </div>
-        </div>
-      `).join("");
-    }
-  } catch(e) {
-    listEl.innerHTML = "<p>Admins fetch error.</p>";
-  }
-}
-
-async function loadAuditLogs(){
-  const body = document.getElementById("auditLogsBody");
-  try {
-    const res = await fetch("/api/owner/audit-logs", {
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    if(data.success && data.logs){
-      body.innerHTML = data.logs.map(l => `
-        <tr>
-          <td>${new Date(l.timestamp).toLocaleString("en-IN")}</td>
-          <td>${escapeHTML(l.performedBy)}</td>
-          <td><b>${escapeHTML(l.action)}</b></td>
-          <td>${escapeHTML(l.target || "-")}</td>
-        </tr>
-      `).join("");
-    }
-  } catch(e){}
-}
-
-document.getElementById("createAdminForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const name = document.getElementById("adminName").value.trim();
-  const email = document.getElementById("adminEmail").value.trim();
-  const password = document.getElementById("adminTempPassword").value;
-  const permissions = {
-    manageProducts: document.getElementById("permProducts").checked,
-    manageCategories: document.getElementById("permCategories").checked,
-    manageOrders: document.getElementById("permOrders").checked,
-    manageDeliveryCharge: document.getElementById("permDeliveryCharge").checked
-  };
-
-  try {
-    const res = await fetch("/api/owner/admins", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ name, email, password, permissions })
-    });
-    const data = await res.json();
-    if(data.success){
-      alert("Naya admin account ban gaya.");
-      document.getElementById("createAdminForm").reset();
-      loadOwnerData();
-    } else {
-      alert(data.message);
-    }
-  } catch(err){
-    alert("Admin create error.");
-  }
-});
-
-async function toggleAdminStatus(id, newStatus){
-  try {
-    const res = await fetch(`/api/owner/admins/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ isActive: newStatus })
-    });
-    const data = await res.json();
-    if(data.success) loadOwnerData();
-    else alert(data.message);
-  } catch(e){ alert("Status error"); }
-}
-
-async function deleteAdmin(id){
-  if(!confirm("Admin delete karna chahte hain?")) return;
-  try {
-    const res = await fetch(`/api/owner/admins/${id}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    if(data.success){
-      alert("Admin delete ho gaya.");
-      loadOwnerData();
-    } else alert(data.message);
-  } catch(e){ alert("Delete error"); }
-}
-
-/* ==================== DELIVERY CHARGE ==================== */
-
-async function fetchDeliveryCharge(){
+async function fetchDeliveryRate(){
   try {
     const res = await fetch("/api/delivery-charge");
     const data = await res.json();
-    const rate = Number(data.rate) || 10;
-    document.getElementById("currentRateDisplay").textContent = `₹${rate} / km`;
-    document.getElementById("deliveryChargeInput").value = rate;
-  } catch(e){
-    document.getElementById("currentRateDisplay").textContent = "₹10 / km (Default)";
-  }
-}
-
-document.getElementById("deliveryChargeForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const rate = Number(document.getElementById("deliveryChargeInput").value);
-  try {
-    const res = await fetch("/api/admin/delivery-charge", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ rate })
-    });
-    const data = await res.json();
-    if(data.success){
-      alert(`Database mein rate ₹${rate}/km save ho gayi.`);
-      fetchDeliveryCharge();
+    if(data.success && Number.isFinite(data.rate)){
+      currentRate = data.rate;
+      document.getElementById("deliveryRateBar").classList.remove("rate-error");
+      document.getElementById("deliveryRateDisplay").textContent = "₹" + currentRate;
+      document.getElementById("cartRateNote").textContent = "₹" + currentRate + "/km";
+      document.getElementById("checkoutRateNote").textContent = "₹" + currentRate;
     } else {
-      alert(data.message);
+      throw new Error();
     }
   } catch(e){
-    alert("Delivery charge save error.");
+    document.getElementById("deliveryRateBar").classList.add("rate-error");
+    document.getElementById("deliveryRateDisplay").textContent = "₹10 (Offline)";
+    document.getElementById("cartRateNote").textContent = "₹10/km";
+    document.getElementById("checkoutRateNote").textContent = "₹10";
   }
-});
-
-/* ==================== PRODUCTS & ORDERS ==================== */
-
-async function loadAllData(){
-  fetchDeliveryCharge();
-  if(currentUser.role === "owner") loadOwnerData();
-  await loadCategories();
-  await loadProducts();
-  await loadOrders();
 }
 
-async function loadCategories(){
+async function fetchCategories(){
   try {
     const res = await fetch("/api/categories");
     const data = await res.json();
-    categories = data.categories || [];
-  } catch(e){ categories = []; }
-  renderCategories();
-  syncCategorySelects();
-}
-
-function renderCategories(){
-  const box = document.getElementById("categoryList");
-  if(!categories.length){
-    box.innerHTML = "<p>Koi category nahi mili.</p>";
-    return;
+    if(data.success && Array.isArray(data.categories)){
+      categories = data.categories;
+    }
+  } catch(e){
+    console.error("Categories fetch failed:", e);
   }
-  box.innerHTML = categories.map(c => `
-    <div class="category-card">
-      <span class="cat-emoji">${escapeHTML(c.emoji)}</span>
-      <span class="cat-name">${escapeHTML(c.name)}</span>
-      <button type="button" class="delete small-btn" onclick="deleteCategory('${c._id}')">Delete</button>
-    </div>
-  `).join("");
+  renderCategories();
 }
 
-function syncCategorySelects(){
-  const select = document.getElementById("category");
-  select.innerHTML = categories.map(c => `<option value="${escapeHTML(c.name)}">${escapeHTML(c.emoji)} ${escapeHTML(c.name)}</option>`).join("");
-
-  const filter = document.getElementById("productCategoryFilter");
-  filter.innerHTML = '<option value="All">Sabhi Categories</option>' + categories.map(c => `<option value="${escapeHTML(c.name)}">${escapeHTML(c.emoji)} ${escapeHTML(c.name)}</option>`).join("");
-}
-
-document.getElementById("categoryForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const name = document.getElementById("categoryName").value.trim();
-  const emoji = document.getElementById("categoryEmoji").value.trim() || "🛍️";
-  try {
-    const res = await fetch("/api/admin/categories", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ name, emoji })
-    });
-    const data = await res.json();
-    if(data.success){
-      document.getElementById("categoryForm").reset();
-      loadCategories();
-    } else alert(data.message);
-  } catch(e){ alert("Category error"); }
-});
-
-async function deleteCategory(id){
-  if(!confirm("Category delete karein? Products move ho jayenge.")) return;
-  try {
-    const res = await fetch(`/api/admin/categories/${id}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    if(data.success){
-      loadCategories();
-      loadProducts();
-    } else alert(data.message);
-  } catch(e){ alert("Delete error"); }
-}
-
-async function loadProducts(){
+async function fetchProducts(){
   try {
     const res = await fetch("/api/products");
     const data = await res.json();
-    products = data.products || [];
-  } catch(e){ products = []; }
-  renderProducts();
+    if(data.success && Array.isArray(data.products)){
+      products = data.products;
+      // Agar cart me koi item hai jiska price admin ne badal diya ho, toh cart price sync karein
+      syncCartPricesWithDatabase();
+    }
+  } catch(e){
+    console.error("Products fetch failed:", e);
+  }
+  showProducts();
 }
 
-function renderProducts(){
-  const box = document.getElementById("products");
-  const chosenCategory = document.getElementById("productCategoryFilter").value || "All";
-  const searchTerm = (document.getElementById("productSearchInput").value || "").trim().toLowerCase();
+function syncCartPricesWithDatabase(){
+  if(!cart.length || !products.length) return;
+  cart.forEach(item => {
+    const fresh = products.find(p => String(p._id || p.id) === String(item.id));
+    if(fresh){
+      item.price = Number(fresh.price);
+      item.name = fresh.name;
+    }
+  });
+  showCart();
+}
 
-  const visible = products.filter(p => {
-    const matchCat = chosenCategory === "All" || p.category === chosenCategory;
-    const matchSearch = !searchTerm || (p.name && p.name.toLowerCase().includes(searchTerm));
+function renderCategories() {
+  const box = document.getElementById("categories");
+  if (!box) return;
+
+  let html = `<div class="category ${selectedCategory === "" ? "active" : ""}" onclick="selectCategory('')"><div class="emoji">🛍️</div>All Products</div>`;
+  html += categories.map(c => {
+    const escapedName = escapeHTML(c.name);
+    const escapedEmoji = escapeHTML(c.emoji);
+    const jsonParam = JSON.stringify(c.name).replace(/"/g, '&quot;');
+    return `<div class="category ${selectedCategory.toLowerCase() === c.name.toLowerCase() ? "active" : ""}" onclick="selectCategory(${jsonParam})"><div class="emoji">${escapedEmoji}</div>${escapedName}</div>`;
+  }).join("");
+
+  box.innerHTML = html;
+}
+
+function showProducts() {
+  const searchInput = document.getElementById("search");
+  const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const box = document.getElementById("products");
+  if (!box) return;
+
+  const filtered = products.filter(p => {
+    const matchCat = !selectedCategory || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
+    const matchSearch = !term || (p.name && p.name.toLowerCase().includes(term));
     return matchCat && matchSearch;
   });
 
-  if(!visible.length){
+  if (!filtered.length) {
     box.innerHTML = "<p>Koi product nahi mila.</p>";
-    return;
-  }
+  } else {
+    box.innerHTML = filtered.map(p => {
+      const isAvailable = p.isAvailable !== false && (p.stock === undefined || p.stock > 0);
+      const photoHtml = p.photo && (p.photo.startsWith("data:image/") || p.photo.startsWith("http"))
+        ? `<img class="product-photo" src="${escapeHTML(p.photo)}" alt="${escapeHTML(p.name)}">`
+        : `<div class="emoji">${escapeHTML(p.emoji || "🛍️")}</div>`;
+      
+      const jsonId = JSON.stringify(p._id || p.id).replace(/"/g, '&quot;');
 
-  box.innerHTML = visible.map(p => `
-    <div class="product">
-      ${p.photo ? `<img class="product-photo" src="${p.photo}" alt="${escapeHTML(p.name)}">` : `<div class="product-photo" style="display:grid;place-items:center;font-size:38px">${escapeHTML(p.emoji || "🛍️")}</div>`}
-      <div class="product-info">
+      return `<div class="product">
+        ${photoHtml}
         <h3>${escapeHTML(p.name)}</h3>
-        <p>Category: <b>${escapeHTML(p.category)}</b> | Status: <b style="color:${p.isAvailable ? '#137a3d':'#c62828'}">${p.isAvailable ? 'In Stock' : 'Out of Stock'}</b></p>
-        <p>Price: <span class="price">${money(p.price)}</span></p>
+        <div class="product-category">${escapeHTML(p.category)}</div>
+        <div class="price">${money(p.price)}</div>
+        ${isAvailable 
+          ? `<button type="button" onclick="addToCart(${jsonId})">+ Cart Mein Jodein</button>`
+          : `<button type="button" disabled style="background:#999;cursor:not-allowed;">Out of Stock</button>`}
+      </div>`;
+    }).join("");
+  }
+}
 
-        <label>Naya Price (₹)</label>
-        <input type="number" id="price-${p._id}" step="0.01" value="${p.price}">
+function selectCategory(name) {
+  selectedCategory = name ? String(name) : "";
+  renderCategories();
+  showProducts();
+}
 
-        <label>Stock Quantity</label>
-        <input type="number" id="stock-${p._id}" value="${p.stock !== undefined ? p.stock : 100}">
+function addToCart(id) {
+  const p = products.find(x => String(x._id || x.id) === String(id));
+  if (!p) {
+    alert("Product uplabdh nahi hai.");
+    return;
+  }
+  const existing = cart.find(x => String(x.id) === String(p._id || p.id));
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({
+      id: String(p._id || p.id),
+      name: p.name,
+      price: Number(p.price),
+      qty: 1
+    });
+  }
+  showCart();
+}
 
-        <div class="actions">
-          <button type="button" onclick="quickUpdate('${p._id}')">Price & Stock Save</button>
-          <button type="button" class="secondary" onclick="toggleAvailability('${p._id}', ${!p.isAvailable})">${p.isAvailable ? 'Mark Out of Stock' : 'Mark In Stock'}</button>
-          <button type="button" class="secondary" onclick="startEditProduct('${p._id}')">Edit Full</button>
-          <button type="button" class="delete" onclick="deleteProduct('${p._id}')">Delete</button>
+function totalAmount() {
+  return cart.reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.qty) || 0), 0);
+}
+
+function showCart() {
+  const box = document.getElementById("cartItems");
+  const totalEl = document.getElementById("total");
+  const checkoutTotalEl = document.getElementById("checkoutTotal");
+  if (!box) return;
+
+  if (!cart.length) {
+    box.textContent = "Abhi cart khaali hai.";
+  } else {
+    box.innerHTML = cart.map((p, i) => `
+      <div class="cart-row">
+        <span>${escapeHTML(p.name)} × ${p.qty} = ${money(p.price * p.qty)}</span>
+        <div class="cart-actions">
+          <button type="button" onclick="changeQty(${i}, -1)">−</button>
+          <b>${p.qty}</b>
+          <button type="button" onclick="changeQty(${i}, 1)">+</button>
+          <button type="button" onclick="removeItem(${i})">Hatao</button>
         </div>
       </div>
-    </div>
-  `).join("");
+    `).join("");
+  }
+
+  const amt = money(totalAmount());
+  if (totalEl) totalEl.textContent = "Subtotal: " + amt;
+  if (checkoutTotalEl) checkoutTotalEl.textContent = "Items Subtotal: " + amt;
 }
 
-document.getElementById("productSearchInput").addEventListener("input", renderProducts);
-document.getElementById("productCategoryFilter").addEventListener("change", renderProducts);
-
-async function quickUpdate(id){
-  const price = Number(document.getElementById("price-" + id).value);
-  const stock = Number(document.getElementById("stock-" + id).value);
-  try {
-    const res = await fetch(`/api/admin/products/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ price, stock })
-    });
-    const data = await res.json();
-    if(data.success){
-      alert("Database mein update ho gaya.");
-      loadProducts();
-    } else alert(data.message);
-  } catch(e){ alert("Update error"); }
+function changeQty(index, delta) {
+  if (!cart[index]) return;
+  cart[index].qty += delta;
+  if (cart[index].qty <= 0) cart.splice(index, 1);
+  showCart();
 }
 
-async function toggleAvailability(id, isAvailable){
-  try {
-    const res = await fetch(`/api/admin/products/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ isAvailable })
-    });
-    const data = await res.json();
-    if(data.success) loadProducts();
-    else alert(data.message);
-  } catch(e){ alert("Stock error"); }
+function removeItem(index) {
+  if (!cart[index]) return;
+  cart.splice(index, 1);
+  showCart();
 }
 
-async function deleteProduct(id){
-  if(!confirm("Product delete karein?")) return;
-  try {
-    const res = await fetch(`/api/admin/products/${id}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    if(data.success){
-      alert("Product delete ho gaya.");
-      loadProducts();
-    } else alert(data.message);
-  } catch(e){ alert("Delete error"); }
+function checkout() {
+  if (!cart.length) {
+    alert("Pehle cart mein product jodiye.");
+    return;
+  }
+  const formSection = document.getElementById("checkoutForm");
+  if (formSection) {
+    formSection.style.display = "block";
+    showCart();
+    formSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
-function startEditProduct(id){
-  const p = products.find(x => x._id === id);
-  if(!p) return;
-  editingId = p._id;
-  document.getElementById("name").value = p.name;
-  document.getElementById("price").value = p.price;
-  document.getElementById("stock").value = p.stock !== undefined ? p.stock : 100;
-  document.getElementById("category").value = p.category;
-  document.getElementById("emoji").value = p.emoji || "🛍️";
-  selectedPhoto = p.photo || "";
-
-  const preview = document.getElementById("photoPreview");
-  if(selectedPhoto){
-    preview.src = selectedPhoto;
-    preview.style.display = "block";
-  } else preview.style.display = "none";
-
-  document.getElementById("formHeading").textContent = "✏️ Product Edit Karein";
-  document.getElementById("saveButton").textContent = "Changes Save Karein";
-  document.getElementById("cancelEdit").hidden = false;
-  document.getElementById("productForm").scrollIntoView({ behavior: "smooth" });
+function closeCheckout() {
+  const formSection = document.getElementById("checkoutForm");
+  if (formSection) formSection.style.display = "none";
 }
 
-document.getElementById("cancelEdit").addEventListener("click", () => {
-  editingId = null;
-  selectedPhoto = "";
-  document.getElementById("productForm").reset();
-  document.getElementById("photoPreview").style.display = "none";
-  document.getElementById("formHeading").textContent = "➕ Naya Product Add Karein";
-  document.getElementById("saveButton").textContent = "Product Save Karein";
-  document.getElementById("cancelEdit").hidden = true;
-});
-
-document.getElementById("photo").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    selectedPhoto = reader.result;
-    const preview = document.getElementById("photoPreview");
-    preview.src = selectedPhoto;
-    preview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById("productForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const name = document.getElementById("name").value.trim();
-  const price = Number(document.getElementById("price").value);
-  const stock = Number(document.getElementById("stock").value);
-  const category = document.getElementById("category").value;
-  const emoji = document.getElementById("emoji").value.trim() || "🛍️";
-
-  const payload = { name, price, stock, category, emoji, photo: selectedPhoto };
-
-  try {
-    const url = editingId ? `/api/admin/products/${editingId}` : "/api/admin/products";
-    const method = editingId ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if(data.success){
-      alert("Product save ho gaya.");
-      document.getElementById("cancelEdit").click();
-      loadProducts();
-    } else alert(data.message);
-  } catch(e){ alert("Save error."); }
-});
-
-/* ==================== ORDERS DASHBOARD ==================== */
-
-async function loadOrders(){
-  if(!currentUser || (!currentUser.permissions?.manageOrders && currentUser.role !== "owner")) return;
-  try {
-    const res = await fetch("/api/admin/orders", {
-      headers: { "Authorization": `Bearer ${currentToken}` }
-    });
-    const data = await res.json();
-    orders = data.orders || [];
-  } catch(e){ orders = []; }
-  renderOrders();
-}
-
-function renderOrders(){
-  const filter = document.getElementById("orderFilter").value;
-  
-  document.getElementById("totalOrders").textContent = orders.length;
-  document.getElementById("pendingOrders").textContent = orders.filter(o => o.status === "Pending" || o.status === "Order Placed").length;
-  document.getElementById("acceptedOrders").textContent = orders.filter(o => o.status === "Accepted").length;
-  document.getElementById("preparingOrders").textContent = orders.filter(o => o.status === "Preparing").length;
-  document.getElementById("outOrders").textContent = orders.filter(o => o.status === "Out for Delivery").length;
-  document.getElementById("deliveredOrders").textContent = orders.filter(o => o.status === "Delivered").length;
-  document.getElementById("cancelledOrders").textContent = orders.filter(o => o.status === "Cancelled" || o.status === "Rejected").length;
-
-  const shown = orders.filter(o => filter === "All" || o.status === filter);
-  const box = document.getElementById("orders");
-  if(!shown.length){
-    box.innerHTML = "<p>Koi order nahi mila.</p>";
+document.getElementById("orderForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  if (!cart.length) {
+    alert("Cart khaali hai.");
+    closeCheckout();
     return;
   }
 
-  box.innerHTML = shown.map(o => {
-    const isTerminal = ["Delivered", "Cancelled", "Rejected"].includes(o.status);
+  const btn = document.getElementById("confirmOrderBtn");
+  btn.disabled = true;
+  btn.textContent = "Order Verify Ho Raha Hai...";
 
-    return `
-      <div class="order">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-          <h3 style="margin:0;">Order ID: ${escapeHTML(o.orderId)}</h3>
-          <span style="font-weight:bold; color:#137a3d;">Status: ${escapeHTML(o.status)}</span>
-        </div>
-        <p style="margin:6px 0;"><b>Customer:</b> ${escapeHTML(o.customerName)} | <b>Mobile:</b> ${escapeHTML(o.phone)}</p>
-        <p style="margin:6px 0;"><b>Address:</b> ${escapeHTML(o.address)}</p>
-        <p style="margin:6px 0;"><b>Items:</b></p>
-        <ul>
-          ${(o.items || []).map(i => `<li>${escapeHTML(i.name)} × ${i.qty} =${money(i.price * i.qty)}</li>`).join("")}
-        </ul>
-        <h3>Subtotal: ${money(o.subtotal || o.total)}</h3>
-        <p style="font-size:13px; color:#555;">Delivery Rate: ₹${o.deliveryRateAtOrder || 10}/km</p>
-        ${o.rejectionReason ? `<p style="color:#c62828;"><b>Rejection Reason:</b> ${escapeHTML(o.rejectionReason)}</p>` : ''}
-        
-        <label>Update Status</label>
-        <select id="status-${o._id}" ${isTerminal ? 'disabled' : ''} onchange="toggleRejectionBox('${o._id}')">
-          <option value="Order Placed" ${o.status === "Order Placed" ? "selected":""}>Order Placed</option>
-          <option value="Pending" ${o.status === "Pending" ? "selected":""}>Pending</option>
-          <option value="Accepted" ${o.status === "Accepted" ? "selected":""}>Accepted</option>
-          <option value="Preparing" ${o.status === "Preparing" ? "selected":""}>Preparing</option>
-          <option value="Out for Delivery" ${o.status === "Out for Delivery" ? "selected":""}>Out for Delivery</option>
-          <option value="Delivered" ${o.status === "Delivered" ? "selected":""}>Delivered</option>
-          <option value="Cancelled" ${o.status === "Cancelled" ? "selected":""}>Cancelled</option>
-          <option value="Rejected" ${o.status === "Rejected" ? "selected":""}>Rejected</option>
-        </select>
+  const customerName = document.getElementById("customerName").value.trim();
+  const phone = document.getElementById("customerPhone").value.trim();
+  const address = document.getElementById("customerAddress").value.trim();
 
-        <div id="rejectBox-${o._id}" style="display:none; margin-top:8px;">
-          <label>Rejection Reason</label>
-          <input type="text" id="reason-${o._id}" placeholder="Out of delivery area, item unavailable etc.">
-        </div>
-
-        <div style="margin-top:8px;">
-          ${!isTerminal ? `<button type="button" class="small-btn" onclick="saveOrderStatus('${o._id}')">Status Save Karein</button>` : `<span style="font-size:13px;color:#777;">(Terminal Status - No further edits allowed)</span>`}
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-function toggleRejectionBox(id){
-  const sel = document.getElementById("status-" + id);
-  const box = document.getElementById("rejectBox-" + id);
-  if(sel && box){
-    box.style.display = sel.value === "Rejected" ? "block" : "none";
+  const phoneRegex = /^[6-9]\d{9}$/;
+  if (!customerName || !phoneRegex.test(phone) || !address) {
+    alert("Kripya sahi 10-digit mobile number aur poora address bhariye.");
+    btn.disabled = false;
+    btn.textContent = "Order Confirm Karein";
+    return;
   }
-}
 
-async function saveOrderStatus(id){
-  const status = document.getElementById("status-" + id).value;
-  const reasonInput = document.getElementById("reason-" + id);
-  const rejectionReason = reasonInput ? reasonInput.value.trim() : "";
+  // Exact database object ID and quantities payload
+  const orderPayload = {
+    customerName,
+    phone,
+    address,
+    paymentMethod: "Cash on Delivery",
+    items: cart.map(i => ({
+      id: i.id,
+      name: i.name,
+      qty: i.qty
+    }))
+  };
 
   try {
-    const res = await fetch(`/api/admin/orders/${id}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`
-      },
-      body: JSON.stringify({ status, rejectionReason })
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload)
     });
     const data = await res.json();
-    if(data.success){
-      alert("Order status update ho gaya aur customer tracking me sync ho gaya.");
-      loadOrders();
-    } else alert(data.message);
-  } catch(e){ alert("Update status error"); }
-}
+    if(data.success && data.order){
+      alert(`Order Safalta-purvak Place Ho Gaya!\n\nOrder ID: ${data.order.orderId}\nServer Verified Subtotal: ${money(data.order.subtotal || data.order.total)}\n\n(Delivery charge ₹${data.order.deliveryRateAtOrder}/km ke hisaab se merchant confirm karenge.)`);
+      cart = [];
+      showCart();
+      document.getElementById("orderForm").reset();
+      closeCheckout();
+    } else {
+      alert("Order Error: " + (data.message || "Order place nahi ho saka."));
+    }
+  } catch(err){
+    alert("Server connect nahi hua. Kripya connection check karein.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Order Confirm Karein";
+  }
+});
 
-document.getElementById("orderFilter").addEventListener("change", renderOrders);
-document.getElementById("refreshOrdersBtn").addEventListener("click", loadOrders);
+document.getElementById("search").addEventListener("input", showProducts);
 
-checkAuthSession();
+// Load everything on startup
+fetchDeliveryRate();
+fetchCategories();
+fetchProducts();
+showCart();
+
+// Live background refresh every 20 seconds for multi-device sync
+setInterval(() => {
+  fetchDeliveryRate();
+  fetchProducts();
+}, 20000);
 </script>
-
 </body>
 </html>
