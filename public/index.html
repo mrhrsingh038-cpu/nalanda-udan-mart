@@ -460,5 +460,49 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 
+<!-- Install App Button -->
+<button id="installAppBtn" style="
+position:fixed;
+bottom:20px;
+right:20px;
+z-index:9999;
+background:#137a3d;
+color:white;
+border:none;
+padding:14px 22px;
+border-radius:30px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+display:none;
+box-shadow:0 4px 12px rgba(0,0,0,0.3);
+">
+📲 Install App
+</button>
+
+<script>
+let deferredPrompt;
+const installBtn = document.getElementById("installAppBtn");
+
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    installBtn.style.display = "block";
+});
+//install app ke liye
+installBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = "none";
+});
+
+window.addEventListener("appinstalled", () => {
+    installBtn.style.display = "none";
+});
+</script>
+
 </body>
 </html>
