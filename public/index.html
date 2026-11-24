@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="theme-color" content="#137a3d">
+<link rel="manifest" href="/manifest.json">
+
 <title>NALANDA UDAN MART | Online Shopping</title>
 <meta name="description" content="Nalanda Udan Mart - Parbalpur, Nalanda, Bihar mein grocery aur daily essentials ki online shopping.">
 
 <meta name="google-site-verification" content="JbvB2lwatdL5Wr9EoSVTlZVI7lls3eFxWQIYSVJwsp4" />
+
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f5f7f2;color:#222}
@@ -438,5 +445,20 @@ setInterval(() => {
   fetchProducts();
 }, 20000);
 </script>
+<script>
+  //bad me app ke liye kar rahe the to add kiye
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/service-worker.js")
+      .then(function () {
+        console.log("Nalanda Udan Mart App Ready");
+      })
+      .catch(function (error) {
+        console.log("Service Worker Error:", error);
+      });
+  });
+}
+</script>
+
 </body>
 </html>
