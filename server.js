@@ -26,6 +26,17 @@ const JWT_SECRET = process.env.JWT_SECRET;
 app.use(cors());
 app.use(express.json({ limit: "4mb" }));
 
+// Google Search Console - Robots.txt Fix
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain");
+  res.send(`User-agent: *
+Allow: /
+
+Disallow: /admin.html
+Disallow: /api/
+`);
+});
+
 // Dynamic Public Static Directory Fallback
 const publicDir = fs.existsSync(path.join(__dirname, "public"))
   ? path.join(__dirname, "public")
