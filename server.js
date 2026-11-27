@@ -33,6 +33,12 @@ const publicDir = fs.existsSync(path.join(__dirname, "public"))
   ? path.join(__dirname, "public")
   : __dirname;
 
+// Allow Google and other search engines to crawl the website
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain");
+  res.send("User-agent: *\nAllow: /\n");
+});
+//************ */
 app.use(express.static(publicDir));
 
 const loginLimiter = rateLimit({
